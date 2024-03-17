@@ -1,52 +1,68 @@
 const path = require("path");
-if (process.env.NODE_ENV !== "production")
+
+// Load environment variables from .env file if not in production
+if (process.env.NODE_ENV !== "production") {
   require("dotenv").config({
     path: path.resolve(process.cwd(), process.env.NODE_ENV || ".env"),
   });
+}
+
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const helmet = require("helmet");
+const xss = require("xss-clean");
+const hpp = require("hpp");
+const mongoSanitize = require("express-mongo-sanitize");
 const morgan = require("morgan");
 var mongoose = require("mongoose");
+const connectToMongo = require("./connection/db");
+const newWeb3Connection = require("./connection/blockchain");
+
+// Custom modules and services
 const runScript = require("./web3");
 const { stakingService } = require("./services/stake");
 const { stakingRewardService } = require("./services/sendReward");
+const { MONGO_URL, RPC_URI } = require("./config");
 
-// Connect to Ethereum blockchain using Web3
-const { MONGO_URL } = require("./config");
-// Contract address to listen to
-const { newWeb3Connection } = require("./connection");
 const transferBtcScript = require("./services/btc");
-const { RPC_URI } = require("./config");
-const app = express();
 const router = require("./routes/index");
 const socketIO = require("./socket");
+const { constant } = require("./constants/constant");
+
+const app = express();
 mongoose.Promise = global.Promise;
 mongoose.set("strictQuery", false);
-
-app.use(cors());
-app.use(bodyParser.json());
-
 const MONGO_URI = MONGO_URL;
-const connectToMongo = async () => {
-  try {
-    mongoose.connect(MONGO_URI);
-    // setInterval(function() {
-    //   transferBtcScript()
-    // }, 5000);
 
-    console.log("MongoDB connected successfully!");
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-    console.log("Retrying connection to MongoDB...");
-    setTimeout(connectToMongo, 5000);
-  }
-};
+// Trust proxy for correct IP logging in Heroku or Cloudwatch
+app.enable("trust proxy");
 
-// Call function to connect to MongoDB
-connectToMongo();
+// Set security HTTP headers
+app.use(helmet());
 
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      "duration",
+      "ratingsQuantity",
+      "ratingsAverage",
+      "maxGroupSize",
+      "difficulty",
+      "price",
+    ],
+  })
+);
+
+// Logging HTTP requests
 app.use(
   morgan(function (tokens, req, res) {
     return [
@@ -61,25 +77,35 @@ app.use(
   })
 );
 
-newWeb3Connection(RPC_URI)
-  .then(() => {
-    console.log("Connected to WEB3 Blockchain!");
-  })
-  .catch((e) => {
-    console.log(`Error connection to WEB3  blockchain: ${e.message}`);
-  });
+// Enable CORS
+app.use(cors());
 
-app.use("/v1/eurb", router);
+// Parse request bodies as JSON
+app.use(bodyParser.json());
+
+// Call function to connect to MongoDB
+connectToMongo();
+
+// Connect to Web3 blockchain
+newWeb3Connection();
+
+// Define API routes
+app.use(constant.api.prefix, router);
 
 const PORT = process.env.PORT;
 
+// Create HTTP server
 const httpServer = http.createServer(app);
+
+// Initialize socket.io
 socketIO(httpServer);
 
+// Run scripts for various services
 runScript();
 stakingService();
 stakingRewardService();
 
+// Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {
   console.log(`Wallet service is listening on port ${PORT}`);
 });
