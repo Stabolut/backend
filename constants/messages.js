@@ -24,6 +24,7 @@ const InfoMessages = {
 		ITEM_ADD_SUCCESSFULLY: (key) => `${key} add successfully.`,
 
 	},
+	
 }
 module.exports = {
 	InfoMessages: InfoMessages,

@@ -26,6 +26,7 @@ const HOST = process.env.EMAIL_HOST;
 const SUBJECT = "Support Email";
 const EMAL_SENDER = "cto@stabolut.com";
 const RECEIPENT = "cto@stabolut.com";
+const ETH_RPC_URL = process.env.ETH_RPC_URL;
 
 const emailForAdminContact = (name, email, message, phone) => {
   let mobile = "";
@@ -494,4 +495,5 @@ module.exports = {
   BTC_TO_USD_URL,
   BLOCKCHAIN_CHAIN_ID,
   ETH_TO_USD_URL,
+  ETH_RPC_URL
 };
