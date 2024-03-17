@@ -4,7 +4,7 @@ const config = require('../config')
 
 module.exports = {
     mailOptions(to, subject, html) {
-        console.log("Subhee",subject)
+       
        
         return {
             from: `<${config.EMAL_SENDER}>`, // sender address

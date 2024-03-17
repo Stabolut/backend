@@ -1,60 +1,71 @@
+// Importing required modules
 var admin = require("firebase-admin");
-const WalletModel = require("./models/WalletModel")
+const WalletModel = require("./models/WalletModel");
+// Importing Firebase service account key file
 var serviceAccount = require("./eurb-3a677-firebase-adminsdk-mzrqh-52b1120d3f.json");
 
+// Initializing Firebase Admin SDK
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
+/**
+ * Function to send a notification to a user device
+ * @param {string} userToken - The device token of the user
+ * @param {string} body - The body of the notification
+ * @param {string} title - The title of the notification
+ * @param {string} subtitle - The subtitle of the notification (optional)
+ * @param {object} metaData - Additional metadata associated with the notification
+ */
 const sendNotification = (userToken, body, title, subtitle = "", metaData) => {
-   
-    try {
-        admin.messaging().send({
-            token: userToken,
-            data: {
-                customData: "",
-                id: "1",
-                ad: "",
-                subTitle: subtitle
-            },
-            android: {
-                notification: {
-                    body: body,
-                    title: title,
-                    color: "#788595",
-                    priority: "high",
-                    sound: "default",
-                    vibrateTimingsMillis: [200, 500, 800]
-                    //imageUrl: "https://images.unsplash.com/photo-1516475429286-465d815a0df7?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+  try {
+    // Sending notification using Firebase Admin SDK
+    admin
+      .messaging()
+      .send({
+        token: userToken,
+        data: {
+          customData: "",
+          id: "1",
+          ad: "",
+          subTitle: subtitle,
+        },
+        android: {
+          notification: {
+            body: body,
+            title: title,
+            color: "#788595",
+            priority: "high",
+            sound: "default",
+            vibrateTimingsMillis: [200, 500, 800],
+          },
+        },
+      })
+      .then((msg) => {
+        console.log(msg);
+      })
+      .catch(async (err) => {
+        // Handling token expiration error
+        if (err.message === "Requested entity was not found.") {
+          console.log("Token is expired", userToken);
+          // Updating the user's token array in the database to remove the expired token
+          try {
+            await WalletModel.updateOne(
+              { account: metaData.address },
+              { $pull: { tokenArray: { token: userToken } } }
+            );
+          } catch (e) {
+            // Error handling for database update failure
+          }
+        }
+      });
+  } catch (e) {
+    console.log("Error in notification service", e);
+    // Error handling for notification service failure
+  }
+};
 
-                }
-            }
-        }).then((msg) => {
-            console.log(msg)
-        }).catch(async (err) => {
-
-            if (err.message === "Requested entity was not found.") {
-                console.log("Token is expired", userToken)
-                try {
-                    await WalletModel.updateOne(
-                        { account: metaData.address },
-                        { $pull: { tokenArray: { token: userToken } } }
-                    );
-                }
-                catch (e) {
-                }
-            }
-        })
-    } catch (e) {
-        console.log("Error in notification service", e)
-        // throw false;
-    }
-}
-
+// Exporting the sendNotification function for use in other parts of the application
 module.exports = {
-    sendNotification
-
-}
-
-// body: "Nodejsden Gelen Bildirim 😊",
-// title: "title 😊",
+  sendNotification,
+};

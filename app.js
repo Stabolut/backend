@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== "production") {
     path: path.resolve(process.cwd(), process.env.NODE_ENV || ".env"),
   });
 }
-
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -25,8 +24,6 @@ const runScript = require("./web3");
 const { stakingService } = require("./services/stake");
 const { stakingRewardService } = require("./services/sendReward");
 const { MONGO_URL, RPC_URI } = require("./config");
-
-const transferBtcScript = require("./services/btc");
 const router = require("./routes/index");
 const socketIO = require("./socket");
 const { constant } = require("./constants/constant");

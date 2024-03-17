@@ -1,4 +1,4 @@
-const { body, param, query, check } = require("express-validator");
+const { body, query } = require("express-validator");
 const { ErrorMessages } = require("../constants/errors");
 
 let addressType = ["btc", "eth"];
