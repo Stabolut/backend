@@ -1,36 +1,39 @@
-const mongoose = require("mongoose")
+// Importing the mongoose library
+const mongoose = require("mongoose");
+// Getting the Schema object from mongoose
 const Schema = mongoose.Schema;
 
-// Create Schema
+// Define the schema for the Stake document
 const StakeSchema = new Schema({
-    wallet: {
-        type: String,
-        required: true,
-    },
-    yieldAmount: {
-        type: String,
-        required: true,
-    },
-    amount: {
-        type: Number,
-        required: true,
-    },
-    hash: {
-        type: Number,
-        required: true,
-
-    },
-    // mobile: {
-    //     type: String,
-    //     required: true,
-    //     unique: true
-    // },
-    timestamps: { created_At: { type: Date, default: Date.now }, updated_At: { type: Date, default: Date.now } },
-
+  // Field to store the wallet address
+  wallet: {
+    type: String,
+    required: true,
+  },
+  // Field to store the yield amount
+  yieldAmount: {
+    type: String,
+    required: true,
+  },
+  // Field to store the stake amount
+  amount: {
+    type: Number,
+    required: true,
+  },
+  // Field to store the transaction hash
+  hash: {
+    type: Number,
+    required: true,
+  },
+  // Field to store timestamps for document creation and updation
+  timestamps: {
+    created_At: { type: Date, default: Date.now },
+    updated_At: { type: Date, default: Date.now },
+  },
 });
 
+// Creating a model based on the schema
 let StakeModel = mongoose.model("stake", StakeSchema);
 
-module.exports = StakeModel
-
-
+// Exporting the model for use in other parts of the application
+module.exports = StakeModel;

@@ -1,4 +1,4 @@
-// Import the DepositAdminModel to interact with the database
+// Import required modules and models
 const { ApiError } = require("@google-cloud/storage/build/src/nodejs-common");
 const DepositAdminModel = require("../models/DepositAdminAddressesModel");
 const PurchasenModel = require("../models/PurchaseModel");
@@ -26,8 +26,12 @@ const Web3 = require("web3");
 const web3Eth = new Web3(ETH_RPC_URL);
 const web3Usb = new Web3(RPC_URI);
 
-// Service function to retrieve deposit address based on query parameters
-getDepositAddress = async (req, res) => {
+/**
+ * Retrieves the active deposit address based on the type provided in the request query.
+ * @param {object} req - The request object containing the query parameter for the type.
+ * @returns {object} The active deposit address.
+ */
+const getDepositAddress = async (req) => {
   // Query the database to find the active deposit address based on the provided type
   let depositAddress = await DepositAdminModel.findOne({
     isActive: true, // Filter for active deposit addresses
@@ -37,12 +41,18 @@ getDepositAddress = async (req, res) => {
   return depositAddress;
 };
 
-purchaseUSBWithEther = async (req, res) => {
+/**
+ * Purchases USB coins using Ethereum.
+ * @param {object} req - The request object containing the transaction details.
+ * @throws {ApiError} If the recipient address is invalid or if the transaction is pending.
+ * @returns {string} Confirmation message upon successful purchase.
+ */
+const purchaseUSBWithEther = async (req) => {
   let despositAmount;
 
   if (!isValidEthereumAddress(req.body.usbAddress))
     throw new ApiError(
-      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Receipent"),
+      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
       400
     );
 
@@ -57,7 +67,7 @@ purchaseUSBWithEther = async (req, res) => {
 
   despositAmount = tx.value;
 
-  //     let despositAmount, usdRate
+  // Retrieve admin deposit address and check for existing hash
   let admin = await DepositAdminModel.findOne({
     type: "eth",
     isActive: true,
@@ -67,6 +77,7 @@ purchaseUSBWithEther = async (req, res) => {
     transactionHash: req.body.hash,
   });
 
+  // Validate transaction hash and recipient address
   if (checkHashExist)
     throw new ApiError(
       ErrorMessages.ADMIN.HASH_ALREADY_USED_ERROR(
@@ -79,18 +90,21 @@ purchaseUSBWithEther = async (req, res) => {
   if (resp.to !== admin.depositAddress.toLowerCase())
     throw new ApiError(
       ErrorMessages.ADMIN.INVALID_HASH(
-        ErrorMessages.ADMIN.INVALID_HASH(admin.depositAddres)
+        ErrorMessages.ADMIN.INVALID_HASH(admin.depositAddress)
       ),
       400
     );
 
+  // Fetch USD rate for conversion
   const response = await axios.get(ETH_TO_USD_URL);
-
   let usdRate = response.data.ethereum.usd;
 
+  // Calculate gas price, gas limit, and nonce for transaction
   const gasPrice = await web3Usb.eth.getGasPrice();
   const gasLimit = 21000000;
   const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
+
+  // Create contract instance and encode transaction data
   const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
   let tx1 = await contract.methods.mint(
     req.body.usbAddress,
@@ -98,6 +112,7 @@ purchaseUSBWithEther = async (req, res) => {
   );
   const encoded_tx = tx1.encodeABI();
 
+  // Build transaction object
   let transactionObject = {
     nonce: web3Usb.utils.toHex(nonce),
     from: FUNDING_ADDRESS,
@@ -106,8 +121,11 @@ purchaseUSBWithEther = async (req, res) => {
     to: CONTRACT_ADDRESS,
     data: encoded_tx,
   };
+
+  // Sign and send the transaction
   const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
 
+  // Save purchase transaction details
   let purchase = new PurchasenModel({
     transactionHash: req.body.hash,
     purchaseSuccessStatus: true,
@@ -127,7 +145,13 @@ purchaseUSBWithEther = async (req, res) => {
   }.`;
 };
 
-purchaseUSBWithBtc = async (req, res) => {
+/**
+ * Purchases USB coins using Bitcoin.
+ * @param {object} req - The request object containing the transaction details.
+ * @throws {ApiError} If the recipient address is invalid, the hash is already used, or the transaction is pending.
+ * @returns {string} Confirmation message upon successful purchase.
+ */
+const purchaseUSBWithBtc = async (req) => {
   let despositAmount, usdRate;
 
   let admin = await DepositAdminModel.findOne({
@@ -136,7 +160,7 @@ purchaseUSBWithBtc = async (req, res) => {
   });
   if (!isValidEthereumAddress(req.body.usbAddress))
     throw new ApiError(
-      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Receipent"),
+      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
       400
     );
 
@@ -170,7 +194,7 @@ purchaseUSBWithBtc = async (req, res) => {
     if (!userFind) {
       throw new ApiError(
         ErrorMessages.ADMIN.INVALID_HASH(
-          ErrorMessages.ADMIN.INVALID_HASH(admin.depositAddres)
+          ErrorMessages.ADMIN.INVALID_HASH(admin.depositAddress)
         ),
         400
       );
@@ -180,12 +204,12 @@ purchaseUSBWithBtc = async (req, res) => {
       despositAmount = receiedTransactionObject.value / 100000000;
       usdRate = response.data.bitcoin.usd;
 
-      // now we will mint coin
+      // Calculate gas price, gas limit, and nonce for transaction
       const gasPrice = await web3Usb.eth.getGasPrice();
       const gasLimit = 21000000;
-
       const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
 
+      // Create contract instance and encode transaction data
       const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
       let tx1 = await contract.methods.mint(
         req.body.usbAddress,
@@ -194,6 +218,7 @@ purchaseUSBWithBtc = async (req, res) => {
 
       const encoded_tx = tx1.encodeABI();
 
+      // Build transaction object
       let transactionObject = {
         nonce: web3Usb.utils.toHex(nonce),
         from: FUNDING_ADDRESS,
@@ -203,8 +228,10 @@ purchaseUSBWithBtc = async (req, res) => {
         data: encoded_tx,
       };
 
+      // Sign and send the transaction
       const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
 
+      // Save purchase transaction details
       let purchase = new PurchasenModel({
         transactionHash: req.body.hash,
         purchaseSuccessStatus: true,
@@ -224,10 +251,11 @@ purchaseUSBWithBtc = async (req, res) => {
       req.body.usbAddress
     }.`;
   } else {
-    throw new ApiError(ErrorMessages.ADMIN.BTC_PEDNING_HASH_ERROR, 400);
+    throw new ApiError(ErrorMessages.ADMIN.BTC_PENDING_HASH_ERROR, 400);
   }
 };
-// Export the controller function
+
+// Export the controller functions
 module.exports = {
   getDepositAddress,
   purchaseUSBWithEther,

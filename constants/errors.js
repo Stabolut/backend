@@ -83,7 +83,7 @@ const ErrorMessages = {
         error ? error : ""
       }`,
     RECORD_NOT_FOUND: (record) =>
-      `There is no record found against this : ${record} with could not be found.`,
+      `There is no record found against this : ${record}.`,
     INTERNEL_SERVER_ERROR:
       "There is some internal server error.Please try again letter",
     INVALID_HASH: (address) =>
@@ -102,6 +102,9 @@ const ErrorMessages = {
 
     BTC_PEDNING_HASH_ERROR:
       "To purchase a USB using Bitcoin, you need to ensure that your Bitcoin transaction receives at least one confirmation. This means that the transaction needs to be verified by the Bitcoin network and added to the blockchain before it can be considered valid.",
+  },
+  USER: {
+    INVALID_ADDRESS: (value) => `${value} address is invalid`,
   },
 };
 
