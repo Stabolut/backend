@@ -36,5 +36,5 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          bash $PWD/app/deploy_script.sh
+          cd $PWD/app && bash deploy_script.sh
         
