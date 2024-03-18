@@ -1,4 +1,4 @@
-echo "This will stop and remove wallet container, then remove wallet image and create and run new image"
+echo "This will stop and remove wallet container, then remove wallet v2 image and create and run new image"
 
 echo "Stoping docker for wallet...."
 docker stop  wallet-service-v2
