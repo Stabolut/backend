@@ -2,8 +2,8 @@
 const stakingService = require("../service/stakingService");
 // Importing the sendSuccessResponse function from the responses utility module
 const { sendSuccessResponse } = require("../utils/responses");
-// Importing InfoMessages constant from the messages constants module
-const { InfoMessages } = require("../constants/messages");
+// Importing infoMessages constant from the messages constants module
+const { infoMessages } = require("../constants/messages");
 
 // Function to add stake
 addInStake = async (req, res) => {
@@ -13,7 +13,7 @@ addInStake = async (req, res) => {
   // Send a success response with the stake details received from the addInStake function
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_ADD_SUCCESSFULLY("Stake"),
+    infoMessages.GENERIC.ITEM_ADD_SUCCESSFULLY("Stake"),
     200,
     stake
   );
@@ -27,7 +27,7 @@ getInStake = async (req, res) => {
   // Send a success response with the list of stake details received from the getStakeList function
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake"),
     200,
     stakeList
   );
@@ -41,7 +41,7 @@ stakeTransactions = async (req, res) => {
   // Send a success response with the list of all stake transactions received from the allStakeTransactionList function
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake transaction list"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake transaction list"),
     200,
     list
   );
@@ -55,7 +55,7 @@ stakeReward = async (req, res) => {
   // Send a success response with the list of stake rewards received from the stakeReward function
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake reward"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake reward"),
     200,
     contactList
   );

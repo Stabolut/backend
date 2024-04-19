@@ -1,4 +1,4 @@
-const WalletModel = require("../models/WalletModel");
+const WalletModel = require("../models/walletModel");
 const { getTokenBalance } = require("../utils/wallet");
 const AutomateStakeModel = require("../models/AutomateStakeModel");
 const axios = require("axios");

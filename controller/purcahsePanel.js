@@ -2,8 +2,8 @@
 const purchase = require("../service/purchasePanelService");
 // Importing the sendSuccessResponse function from the responses utility module
 const { sendSuccessResponse } = require("../utils/responses");
-// Importing InfoMessages constant from the messages constants module
-const { InfoMessages } = require("../constants/messages");
+// Importing infoMessages constant from the messages constants module
+const { infoMessages } = require("../constants/messages");
 
 // Function to get the deposit address
 getDepositAddress = async (req, res) => {
@@ -12,7 +12,7 @@ getDepositAddress = async (req, res) => {
   // Send a success response with the deposit address received from the getDepositAddress function
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Admin deposit address"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Admin deposit address"),
     200,
     depositAddress
   );
@@ -34,9 +34,18 @@ purchaseUSBWithBtc = async (req, res) => {
   return sendSuccessResponse(res, msg, 200);
 };
 
+// Function to check user wallet existance
+checkUserWalletExistence = async (req, res) => {
+ 
+  let isExist = await purchase.checkUserWalletExistence(req);
+  return sendSuccessResponse(res, infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("User wallet info"), 200, isExist);
+};
+
+
 // Exporting the functions so they can be used elsewhere
 module.exports = {
   getDepositAddress,
   purchaseUSBWithEther,
   purchaseUSBWithBtc,
+  checkUserWalletExistence
 };

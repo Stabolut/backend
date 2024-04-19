@@ -12,7 +12,7 @@ const {
   walletAddressValidation,
   transactionStatusUpdateStatus,
 } = require("../validation/walletRouteValidation");
-const { validateRequest } = require("../middlewares/validate-request");
+const { validateRequest } = require("../middlewares/validateRequest");
 const route = require("./route");
 
 router.get(route.CREATE, httpErrorHandler(createWallet));

@@ -1,4 +1,4 @@
-const WalletModel = require("../models/WalletModel");
+const WalletModel = require("../models/walletModel");
 const { mint } = require("../utils/wallet");
 const AutomateStakeModel = require("../models/AutomateStakeModel");
 const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");

@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 // Importing validator library for data validation
 const validator = require("validator");
 // Importing error messages constants
-const { ErrorMessages } = require("../constants/errors");
+const { errorMessages } = require("../constants/errors");
 
 // Define the schema for the USBUserModle document
 const USBUserModleSchema = new Schema({
@@ -15,7 +15,7 @@ const USBUserModleSchema = new Schema({
     // Validate email format using validator
     validate: [
       validator.isEmail,
-      JSON.stringify(ErrorMessages.AUTH.VALIDATION_FAILED("email")),
+      JSON.stringify(errorMessages.AUTH.VALIDATION_FAILED("email")),
     ],
     lowercase: true,
     unique: true, // Ensure uniqueness of email addresses

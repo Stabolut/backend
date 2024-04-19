@@ -18,7 +18,8 @@ const morgan = require("morgan");
 var mongoose = require("mongoose");
 const connectToMongo = require("./connection/db");
 const newWeb3Connection = require("./connection/blockchain");
-
+const { ethToUsbTokenExchangeService } = require("./workers/ethToUsbTokenExchangeService")
+const { btcToUsbTokenExchangeService } = require("./workers/btcToUsbTokenExchangeService")
 // Custom modules and services
 const runScript = require("./web3");
 const { stakingService } = require("./services/stake");
@@ -98,9 +99,11 @@ const httpServer = http.createServer(app);
 socketIO(httpServer);
 
 // Run scripts for various services
-runScript();
-stakingService();
-stakingRewardService();
+// runScript();
+// stakingService();
+// stakingRewardService();
+ethToUsbTokenExchangeService()
+btcToUsbTokenExchangeService()
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {

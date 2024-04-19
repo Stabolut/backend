@@ -1,6 +1,6 @@
 // Importing required modules
 var admin = require("firebase-admin");
-const WalletModel = require("./models/WalletModel");
+const WalletModel = require("./models/walletModel");
 // Importing Firebase service account key file
 var serviceAccount = require("./eurb-3a677-firebase-adminsdk-mzrqh-52b1120d3f.json");
 

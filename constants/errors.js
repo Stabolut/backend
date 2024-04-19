@@ -1,4 +1,4 @@
-const ErrorMessages = {
+const errorMessages = {
   COMMON_VALIDATION_ERROR: {
     MAX_LENGTH_ERROR: (key, character) =>
       `${key} must be lesser than ${character} characters`,
@@ -94,8 +94,8 @@ const ErrorMessages = {
     INVALID_WALLET_ADDRESS: (user) => `${user} address is invalid`,
     TRANSACTION_PENDING_ERROR:
       "Your transaction in not confrmed when it's confimred then please deposit hash",
-    HASH_ALREADY_USED_ERROR: (hash, wallet) =>
-      `It appears that the hash you entered has already been utilized. We have completed the transfer of ${hash} USB to the account ${wallet} using that hash. To continue, please provide an alternative hash.`,
+    HASH_ALREADY_USED_ERROR: (wallet) =>
+      `It appears that the hash you entered has already been utilized against the account ${wallet}. To continue, please provide an alternative hash.`,
 
     INVALID_HASH: (address) =>
       `This hash you provide not contain any transaction on our deposit address: ${address}.`,
@@ -109,5 +109,5 @@ const ErrorMessages = {
 };
 
 module.exports = {
-  ErrorMessages: ErrorMessages,
+  errorMessages: errorMessages,
 };
