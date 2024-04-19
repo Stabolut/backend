@@ -2,8 +2,8 @@
 const userService = require("../service/UserRelatedService");
 // Importing the sendSuccessResponse function from the responses utility module
 const { sendSuccessResponse } = require("../utils/responses");
-// Importing InfoMessages constant from the messages constants module
-const { InfoMessages } = require("../constants/messages");
+// Importing infoMessages constant from the messages constants module
+const { infoMessages } = require("../constants/messages");
 
 // Function to get user by wallet or username
 getUserByWalletOrUsername = async (req, res) => {
@@ -20,7 +20,7 @@ assignUsernameToWallet = async (req, res) => {
   await userService.assignUsernameToWallet(req);
 
   // Send a success response with the message indicating username assignment
-  return sendSuccessResponse(res, InfoMessages.USER.USERNAME_ASSIGN, 200);
+  return sendSuccessResponse(res, infoMessages.USER.USERNAME_ASSIGN, 200);
 };
 
 // Function to add contact list
@@ -31,7 +31,7 @@ addContactList = async (req, res) => {
   // Send a success response with the message indicating successful addition of contact and the new user data
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_ADD_SUCCESSFULLY("Contact"),
+    infoMessages.GENERIC.ITEM_ADD_SUCCESSFULLY("Contact"),
     200,
     newUser
   );
@@ -45,7 +45,7 @@ getContactList = async (req, res) => {
   // Send a success response with the message indicating successful retrieval of contact info and the contact list data
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Contact info"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Contact info"),
     200,
     contactList
   );

@@ -4,8 +4,8 @@ const wallet = require("../service/walletService");
 // Importing the sendSuccessResponse function from the responses utility module
 const { sendSuccessResponse } = require("../utils/responses");
 
-// Importing InfoMessages constant from the messages constants module
-const { InfoMessages } = require("../constants/messages");
+// Importing infoMessages constant from the messages constants module
+const { infoMessages } = require("../constants/messages");
 
 // Function to create a new wallet for a user
 createWallet = async (req, res) => {
@@ -15,7 +15,7 @@ createWallet = async (req, res) => {
   // Send a success response with the message indicating successful creation of wallet and the user wallet data
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_CREATED_SUCCESSFULLY("Wallet"),
+    infoMessages.GENERIC.ITEM_CREATED_SUCCESSFULLY("Wallet"),
     200,
     userWallet
   );
@@ -38,7 +38,7 @@ transferTokens = async (req, res) => {
   // Send a success response with the message indicating successful token transfer and the transfer hash
   return sendSuccessResponse(
     res,
-    InfoMessages.WALLET.TOKEN_TRANSFER_SUCCESSFULLY,
+    infoMessages.WALLET.TOKEN_TRANSFER_SUCCESSFULLY,
     200,
     transferHash
   );
@@ -52,7 +52,7 @@ transactionsList = async (req, res) => {
   // Send a success response with the message indicating successful retrieval of transaction list and the list of transactions
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction list"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction list"),
     200,
     transactionsList
   );
@@ -66,7 +66,7 @@ transactionsListWithLimit = async (req, res) => {
   // Send a success response with the message indicating successful retrieval of transaction list and the list of transactions
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction list"),
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction list"),
     200,
     transactionsList
   );
@@ -80,7 +80,7 @@ updateTransactionStatus = async (req, res) => {
   // Send a success response with the message indicating successful update of transaction status
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_UPDATED_SUCCESSFULLY("Transaction status"),
+    infoMessages.GENERIC.ITEM_UPDATED_SUCCESSFULLY("Transaction status"),
     200
   );
 };
@@ -93,7 +93,7 @@ getUserByWallet = async (req, res) => {
   // Send a success response with the message indicating successful retrieval of user by wallet
   return sendSuccessResponse(
     res,
-    InfoMessages.GENERIC.ITEM_UPDATED_SUCCESSFULLY("Transaction status"),
+    infoMessages.GENERIC.ITEM_UPDATED_SUCCESSFULLY("Transaction status"),
     200
   );
 };

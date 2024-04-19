@@ -12,7 +12,7 @@ const {
   getInStakeValidation,
   stakeWalletValidations,
 } = require("../validation/stakeValidation");
-const { validateRequest } = require("../middlewares/validate-request");
+const { validateRequest } = require("../middlewares/validateRequest");
 const route = require("./route");
 
 router.post(

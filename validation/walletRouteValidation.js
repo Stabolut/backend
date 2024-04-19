@@ -1,102 +1,102 @@
 const { body } = require("express-validator");
-const { ErrorMessages } = require("../constants/errors");
+const { errorMessages } = require("../constants/errors");
 
 const addWalletValidation = () => [
   body("account")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("account"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("account"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("account"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("account"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("account")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("account")
     ),
 
   body("token")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("token"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("token"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("token"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("token"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("token")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("token")
     ),
-];
+]
 
 const transferTokenValidation = () => [
   body("signature")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("signature"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("signature"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("signature"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("signature"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("signature")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("signature")
     ),
 
   body("toAddress")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("toAddress"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("toAddress"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("toAddress"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("toAddress"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("toAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("toAddress")
     ),
 
   body("amount")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("amount"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("amount"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("amount"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("amount"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("amount")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("amount")
     ),
 
   body("nonce")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("nonce"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("nonce"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("nonce"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("nonce"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("nonce")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("nonce")
     ),
 
   body("originalAmount")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("originalAmount")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("originalAmount")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("originalAmount")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("originalAmount")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
         "originalAmount"
       )
     ),
@@ -104,18 +104,18 @@ const transferTokenValidation = () => [
   body("senderAddress")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("senderAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("senderAddress")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("senderAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("senderAddress")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
         "senderAddress"
       )
     ),
@@ -123,18 +123,18 @@ const transferTokenValidation = () => [
   body("transNotes")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("transNotes")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("transNotes")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("transNotes")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("transNotes")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("transNotes")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("transNotes")
     )
     .optional(),
 ];
@@ -143,40 +143,40 @@ walletAddressValidation = () => [
   body("walletAddress")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("walletAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("walletAddress")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("walletAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("walletAddress")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
         "walletAddress"
       )
     ),
 ];
 
 transactionStatusUpdateStatus = () => [
- 
-    body("walletAddress")
+
+  body("walletAddress")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("walletAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("walletAddress")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("walletAddress")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("walletAddress")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
         "walletAddress"
       )
     ),
@@ -184,25 +184,25 @@ transactionStatusUpdateStatus = () => [
   body("transactionHash")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("transactionHash")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("transactionHash")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("transactionHash")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("transactionHash")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
         "transactionHash"
       )
     ),
   body("status")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("status")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("status")
     ),
 ];
 

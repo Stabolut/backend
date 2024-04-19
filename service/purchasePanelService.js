@@ -1,8 +1,9 @@
 // Import required modules and models
-const { ApiError } = require("@google-cloud/storage/build/src/nodejs-common");
-const DepositAdminModel = require("../models/DepositAdminAddressesModel");
-const PurchasenModel = require("../models/PurchaseModel");
-const { ErrorMessages } = require("../constants/errors");
+const apiError = require("../error/apiError");
+const depositAdminModel = require("../models/depositAdminAddressesModel");
+const purchasenModel = require("../models/purchaseModel");
+const walletModel = require("../models/walletModel")
+const { errorMessages } = require("../constants/errors");
 
 const {
   ETH_RPC_URL,
@@ -21,8 +22,13 @@ const axios = require("axios");
 const {
   isValidEthereumAddress,
   signAndSendTransaction,
+  signAndSendTransactionOnPurchase,
+  getGasPrice,
 } = require("../utils/wallet");
 const Web3 = require("web3");
+const constant = require("../constants/constant");
+const { infoMessages } = require("../constants/messages");
+const { response } = require("express");
 const web3Eth = new Web3(ETH_RPC_URL);
 const web3Usb = new Web3(RPC_URI);
 
@@ -33,7 +39,7 @@ const web3Usb = new Web3(RPC_URI);
  */
 const getDepositAddress = async (req) => {
   // Query the database to find the active deposit address based on the provided type
-  let depositAddress = await DepositAdminModel.findOne({
+  let depositAddress = await depositAdminModel.findOne({
     isActive: true, // Filter for active deposit addresses
     type: req.query.type, // Filter based on the type provided in the request query
   });
@@ -48,69 +54,99 @@ const getDepositAddress = async (req) => {
  * @returns {string} Confirmation message upon successful purchase.
  */
 const purchaseUSBWithEther = async (req) => {
-  let despositAmount;
 
+  let despositAmount, usdRate, admin
+  const { usbAddress, hash, amount } = req.body
+
+  // Validate recipient address
   if (!isValidEthereumAddress(req.body.usbAddress))
-    throw new ApiError(
-      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
+    throw new apiError(
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
       400
     );
 
-  let resp = await web3Eth.eth.getTransactionReceipt(req.body.hash);
-  let tx = await web3Eth.eth.getTransaction(req.body.hash);
-
-  if (!resp)
-    throw new ApiError(ErrorMessages.ADMIN.TRANSACTION_PENDING_ERROR, 400);
-
-  if (resp && resp.status === false)
-    throw new ApiError(ErrorMessages.ADMIN.TRANSACTION_PENDING_ERROR, 400);
-
-  despositAmount = tx.value;
-
-  // Retrieve admin deposit address and check for existing hash
-  let admin = await DepositAdminModel.findOne({
-    type: "eth",
-    isActive: true,
+  // Check if transaction hash already exists
+  let checkHashExist = await purchasenModel.findOne({
+    transactionHash: hash
   });
 
-  let checkHashExist = await PurchasenModel.findOne({
-    transactionHash: req.body.hash,
-  });
-
-  // Validate transaction hash and recipient address
   if (checkHashExist)
-    throw new ApiError(
-      ErrorMessages.ADMIN.HASH_ALREADY_USED_ERROR(
-        checkHashExist.usbSend,
-        checkHashExist.purchaseUSBWallet
-      ),
-      400
-    );
-
-  if (resp.to !== admin.depositAddress.toLowerCase())
-    throw new ApiError(
-      ErrorMessages.ADMIN.INVALID_HASH(
-        ErrorMessages.ADMIN.INVALID_HASH(admin.depositAddress)
+    throw new apiError(
+      errorMessages.ADMIN.HASH_ALREADY_USED_ERROR(
+        checkHashExist.userUSBWalletAddres
       ),
       400
     );
 
   // Fetch USD rate for conversion
-  const response = await axios.get(ETH_TO_USD_URL);
-  let usdRate = response.data.ethereum.usd;
+  try {
+    const response = await axios.get(ETH_TO_USD_URL);
+    usdRate = response.data.ethereum.usd;
+  }
+  catch (e) {
+    // will get from DB run the service which will save eth rate in DB after sometime
+    usdRate = constant.constant.ethToUsdRate
+
+  }
+
+  // Get transaction receipt and details
+  let resp = await web3Eth.eth.getTransactionReceipt(req.body.hash);
+  let tx = await web3Eth.eth.getTransaction(req.body.hash);
+
+  // Find admin deposit address for validation
+  admin = await depositAdminModel.findOne({
+    type: constant.constant.currencyType.eth,
+    isActive: true,
+  });
+
+  if (resp.to !== admin.depositAddress.toLowerCase()) return errorMessages.GENERIC_ERROR.INVALID_HASH(admin.depositAddress)
+
+
+  // Save initial transaction record
+  let purchase = new purchasenModel({
+    transactionHash: req.body.hash,
+    type: constant.constant.currencyType.eth,
+    conversionRate: usdRate,
+    userUSBWalletAddres: req.body.usbAddress,
+    transferStatus: constant.constant.transferStatus.Processing
+
+  });
+  document = await purchase.save();
+
+  // Handle pending transactions
+  if (!resp) {
+
+    await purchasenModel.updateOne({ _id: document._id }, {
+      $set: { transferStatus: constant.constant.transferStatus.Pending }
+    });
+
+    return infoMessages.ADMIN.PURCHASE_CONFIRMATION_MESSAGE((parseFloat(amount) * usdRate).toFixed(2), usbAddress, hash)
+  }
+
+  if (resp && resp.status === false) {
+
+    await purchasenModel.updateOne({ _id: document._id }, {
+      $set: { transferStatus: constant.constant.transferStatus.Pending }
+    });
+
+    return infoMessages.ADMIN.PURCHASE_CONFIRMATION_MESSAGE((parseFloat(amount) * usdRate).toFixed(2), usbAddress, hash)
+  }
+
+  despositAmount = tx.value;
 
   // Calculate gas price, gas limit, and nonce for transaction
-  const gasPrice = await web3Usb.eth.getGasPrice();
-  const gasLimit = 21000000;
+  let gasLimit = 21000000;
+  let gasPrice = (await getGasPrice()) * 2;
   const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
 
   // Create contract instance and encode transaction data
   const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
-  let tx1 = await contract.methods.mint(
+
+  let mintObject = await contract.methods.mint(
     req.body.usbAddress,
     parseInt((despositAmount / 1e18) * usdRate * 1e2)
   );
-  const encoded_tx = tx1.encodeABI();
+  const encoded_tx = mintObject.encodeABI();
 
   // Build transaction object
   let transactionObject = {
@@ -120,30 +156,32 @@ const purchaseUSBWithEther = async (req) => {
     gasLimit: web3Usb.utils.toHex(gasLimit),
     to: CONTRACT_ADDRESS,
     data: encoded_tx,
+
   };
 
-  // Sign and send the transaction
-  const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+  // Sign and send transaction
+  let transactionResponse = await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
 
-  // Save purchase transaction details
-  let purchase = new PurchasenModel({
-    transactionHash: req.body.hash,
-    purchaseSuccessStatus: true,
-    usbSend: ((despositAmount / 1e18) * usdRate).toFixed(2),
-    receiveAmount: despositAmount / 1e18,
-    type: "ether",
-    usdRate,
-    purchaseUSBWallet: req.body.usbAddress,
-    transactionHashUSB: hash.transactionHash,
+  // Handle successful transaction
+  if (transactionResponse.status === true) {
+
+    await purchasenModel.updateOne({ _id: document._id }, {
+      $set: {
+        usbSentAmount: ((despositAmount / 1e18) * usdRate).toFixed(2),
+        cryptoReceivedAmount: despositAmount / 1e18,
+        transferStatus: constant.constant.transferStatus.Success,
+        transactionHashUSB: transactionResponse.hash.transactionHash
+      }
+    });
+    return infoMessages.ADMIN.TRANSFER_USB_CONFIRMATION_ON_PURCHASE(((despositAmount / 1e18) * usdRate).toFixed(2), usbAddress)
+  }
+  // Handle pending transaction
+  await purchasenModel.updateOne({ _id: document._id }, {
+    $set: { transferStatus: "Pending" }
   });
-  await purchase.save();
+  return infoMessages.ADMIN.TRANSFER_USB_PENDING_ON_PURCHASE(((despositAmount / 1e18) * usdRate).toFixed(2), usbAddress)
 
-  return `Your purchase of ${((despositAmount / 1e18) * usdRate).toFixed(
-    2
-  )} USB coins has been completed successfully. The USB coins have been sent to the wallet address you provided: ${
-    req.body.usbAddress
-  }.`;
-};
+}
 
 /**
  * Purchases USB coins using Bitcoin.
@@ -152,112 +190,141 @@ const purchaseUSBWithEther = async (req) => {
  * @returns {string} Confirmation message upon successful purchase.
  */
 const purchaseUSBWithBtc = async (req) => {
-  let despositAmount, usdRate;
 
-  let admin = await DepositAdminModel.findOne({
-    type: "btc",
-    isActive: true,
-  });
-  if (!isValidEthereumAddress(req.body.usbAddress))
-    throw new ApiError(
-      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
+  console.log("body", req.body, typeof req.body.amount)
+
+  let depositAmount, usdRate, conversionApiResponse, document
+  const { usbAddress, amount, hash } = req.body
+
+  // Validate recipient address
+  if (!isValidEthereumAddress(usbAddress))
+    throw new apiError(
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
       400
     );
 
-  let checkHashExist = await PurchasenModel.findOne({
-    transactionHash: req.body.hash,
+  // Check if transaction hash already exists
+  let checkHashExist = await purchasenModel.findOne({
+    transactionHash: hash,
   });
-  if (checkHashExist)
-    throw new ApiError(
-      ErrorMessages.ADMIN.HASH_ALREADY_USED_ERROR(
-        checkHashExist.usbSend,
-        checkHashExist.purchaseUSBWallet
-      ),
-      400
-    );
 
-  let response = await axios.get(`${BITPAY_URL}/tx/${req.body.hash}`);
+  if (checkHashExist) throw new apiError(errorMessages.ADMIN.HASH_ALREADY_USED_ERROR(checkHashExist.purchaseUSBWallet), 400);
 
-  if (response.data.confirmations > 1) {
-    let { data } = await axios.get(`${BITPAY_URL}/tx/${req.body.hash}/coins`);
-    let receiedTransactionObject = {};
-    let userFind = false;
 
-    for (var i = 0; i < data.outputs.length; i++) {
-      if (admin.depositAddress === data.outputs[i].address) {
-        receiedTransactionObject = data.outputs[i];
-        userFind = true;
-        break;
-      }
-    }
-
-    if (!userFind) {
-      throw new ApiError(
-        ErrorMessages.ADMIN.INVALID_HASH(
-          ErrorMessages.ADMIN.INVALID_HASH(admin.depositAddress)
-        ),
-        400
-      );
-    }
-    if (userFind) {
-      const response = await axios.get(BTC_TO_USD_URL);
-      despositAmount = receiedTransactionObject.value / 100000000;
-      usdRate = response.data.bitcoin.usd;
-
-      // Calculate gas price, gas limit, and nonce for transaction
-      const gasPrice = await web3Usb.eth.getGasPrice();
-      const gasLimit = 21000000;
-      const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
-
-      // Create contract instance and encode transaction data
-      const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
-      let tx1 = await contract.methods.mint(
-        req.body.usbAddress,
-        parseInt(despositAmount * usdRate * 1e2)
-      );
-
-      const encoded_tx = tx1.encodeABI();
-
-      // Build transaction object
-      let transactionObject = {
-        nonce: web3Usb.utils.toHex(nonce),
-        from: FUNDING_ADDRESS,
-        gasPrice: web3Usb.utils.toHex(gasPrice),
-        gasLimit: web3Usb.utils.toHex(gasLimit),
-        to: CONTRACT_ADDRESS,
-        data: encoded_tx,
-      };
-
-      // Sign and send the transaction
-      const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
-
-      // Save purchase transaction details
-      let purchase = new PurchasenModel({
-        transactionHash: req.body.hash,
-        purchaseSuccessStatus: true,
-        usbSend: despositAmount * usdRate,
-        receiveAmount: despositAmount,
-        type: "btc",
-        usdRate,
-        purchaseUSBWallet: req.body.usbAddress,
-        transactionHashUSB: hash.transactionHash,
-      });
-      await purchase.save();
-    }
-
-    return `Your purchase of ${(despositAmount * usdRate).toFixed(
-      2
-    )} USB coins has been completed successfully. The USB coins have been sent to the wallet address you provided: ${
-      req.body.usbAddress
-    }.`;
-  } else {
-    throw new ApiError(ErrorMessages.ADMIN.BTC_PENDING_HASH_ERROR, 400);
+  // Fetch USD rate for conversion
+  try {
+    conversionApiResponse = await axios.get(BTC_TO_USD_URL);
+    usdRate = conversionApiResponse.data.bitcoin.usd;
   }
+  catch (e) {
+    // will get from DB run the service which will save btc rate in DB after sometime
+    usdRate = constant.constant.btcToUsdRate
+
+  }
+
+  // convert amount from string to float
+  depositAmount = parseFloat(amount)
+
+
+  // inital save data of user transaction and transfer status will be processing if we do pending we have chance of double spending service can also triger and send coin to pending one
+  let purchase = new purchasenModel({
+    transactionHash: hash,
+    type: constant.constant.currencyType.btc,
+    conversionRate: usdRate,
+    userUSBWalletAddres: usbAddress,
+    cryptoReceivedAmount: depositAmount,
+    transferStatus: constant.constant.transferStatus.Processing
+
+  });
+  document = await purchase.save();
+
+
+  try {
+
+    response = await axios.get(`${BITPAY_URL}/tx/${hash}`);
+    console.log("Btc reponse", response.data, "usdRate", usdRate)
+
+  }
+  catch (e) {
+   
+
+    await purchasenModel.updateOne({ _id: document._id }, {
+      $set: {
+        transferStatus: constant.constant.transferStatus.Pending
+      }
+    });
+    return infoMessages.ADMIN.PURCHASE_CONFIRMATION_MESSAGE(parseFloat(depositAmount * usdRate).toFixed(2), usbAddress, hash)
+
+  }
+  if (response.data.confirmations > 1) {
+
+    // Calculate gas price, gas limit, and nonce for transaction
+
+    let gasLimit = 21000000;
+    let gasPrice = (await getGasPrice()) * 2;
+    const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
+
+    // Create contract instance and encode transaction data
+    const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+    let mintObject = await contract.methods.mint(
+      usbAddress,
+      parseInt(depositAmount * usdRate * 1e2)
+    );
+
+    const encoded_tx = mintObject.encodeABI();
+
+    // Build transaction object
+    let transactionObject = {
+      nonce: web3Usb.utils.toHex(nonce),
+      from: FUNDING_ADDRESS,
+      gasPrice: web3Usb.utils.toHex(gasPrice),
+      gasLimit: web3Usb.utils.toHex(gasLimit),
+      to: CONTRACT_ADDRESS,
+      data: encoded_tx,
+
+    };
+
+    // Sign and send transaction
+    let transactionResponse = await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
+
+    // Handle successful transaction
+    if (transactionResponse.status === true) {
+
+      await purchasenModel.updateOne({ _id: document._id }, {
+        $set: {
+          usbSentAmount: parseFloat(depositAmount * usdRate).toFixed(2),
+          transferStatus: constant.constant.transferStatus.Success,
+          transactionHashUSB: transactionResponse.hash.transactionHash
+        }
+      });
+      return infoMessages.ADMIN.TRANSFER_USB_CONFIRMATION_ON_PURCHASE(parseFloat(depositAmount * usdRate).toFixed(2), usbAddress)
+    }
+    // Handle pending transaction
+    await purchasenModel.updateOne({ _id: document._id }, {
+      $set: { transferStatus: constant.constant.transferStatus.Pending }
+    });
+    return infoMessages.ADMIN.TRANSFER_USB_PENDING_ON_PURCHASE(parseFloat(depositAmount * usdRate).toFixed(2), usbAddress)
+  }
+
 };
+
+const checkUserWalletExistence = async (req) => {
+
+  let isWalletExist = false
+  let wallet = await walletModel.findOne({ account: req.body.usbAddress });
+  if (wallet) isWalletExist = true
+  return isWalletExist
+}
+
+
+
+
 
 // Export the controller functions
 module.exports = {
   getDepositAddress,
   purchaseUSBWithEther,
   purchaseUSBWithBtc,
+  checkUserWalletExistence
 };

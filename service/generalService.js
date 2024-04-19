@@ -2,7 +2,7 @@
 const emailUtility = require("../utils/emailUtility");
 const config = require("../config");
 const SubscribeModel = require("../models/SubscribeUserMode");
-const ApiError = require("../error/ApiError");
+const ApiError = require("../error/apiError");
 
 /**
  * Sends a contact email to the admin.

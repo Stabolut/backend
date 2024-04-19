@@ -1,10 +1,10 @@
 // Importing required modules and models
 const UserModel = require("../models/UserModel");
 const { isValidEthereumAddress } = require("../utils/wallet");
-const { ErrorMessages } = require("../constants/errors");
+const { errorMessages } = require("../constants/errors");
 const ContactListModel = require("../models/ContactList");
-const { InfoMessages } = require("../constants/messages");
-const ApiError = require("../error/ApiError");
+const { infoMessages } = require("../constants/messages");
+const ApiError = require("../error/apiError");
 
 /**
  * Retrieves a user by their wallet account or username.
@@ -19,13 +19,13 @@ const retrieveUserByWalletOrUsername = async (req, res) => {
 
   if (existingUser) {
     return {
-      message: InfoMessages.GENERIC.RECORD_FOUND(req.body.userID),
+      message: infoMessages.GENERIC.RECORD_FOUND(req.body.userID),
       data: existingUser,
     };
   } else {
     // User not found, return appropriate message
     return {
-      message: InfoMessages.GENERIC.RECORD_NOT_FOUND(req.body.userID),
+      message: infoMessages.GENERIC.RECORD_NOT_FOUND(req.body.userID),
       data: null,
     };
   }
@@ -65,10 +65,10 @@ const assignUsernameToWallet = async (req, res) => {
  */
 const addContactList = async (req, res) => {
   if (!isValidEthereumAddress(req.body.receiverAccount))
-    throw new ApiError(ErrorMessages.USER.INVALID_ADDRESS("Receiver"), 404);
+    throw new ApiError(errorMessages.USER.INVALID_ADDRESS("Receiver"), 404);
 
   if (!isValidEthereumAddress(req.body.senderAccount))
-    throw new ApiError(ErrorMessages.USER.INVALID_ADDRESS("Sender"), 404);
+    throw new ApiError(errorMessages.USER.INVALID_ADDRESS("Sender"), 404);
 
   // Check if the contact already exists
   const accountExist = await ContactListModel.findOne({

@@ -1,4 +1,4 @@
-const InfoMessages = {
+const infoMessages = {
   AUTH: {
     REGISTER_SUCCESSFULLY: (email, phone) =>
       `Registered Successfully.We have sent the verification OTP code.Please check your Email:${email} or Phone:${phone} and verify the otp code`,
@@ -38,7 +38,19 @@ const InfoMessages = {
   USER: {
     USERNAME_ASSIGN: "Username successfully assigned to the wallet",
   },
+  ADMIN: {
+    PURCHASE_CONFIRMATION_MESSAGE: (amount, usbAddress, hash) =>
+      `Your purchase request of ${amount} USB coins has been received successfully. The USB coins will be sent to the wallet address you provided: ${usbAddress
+      } once your transaction is confirmed on the blockchain. Please monitor the transaction status continuously on the explorer. Once confirmed, we will send you the token. This is your transaction hash: ${hash} kindly check it on the explorer.`,
+ 
+      TRANSFER_USB_CONFIRMATION_ON_PURCHASE: (amount, usbAddress) => `Your purchase of ${amount} USB coins has been completed successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress}.`,
+      TRANSFER_USB_PENDING_ON_PURCHASE: (amount, usbAddress) => `Your purchase request of ${amount} USB coins has been received successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress} shorlty.`
+     
+
+
+
+    }
 };
 module.exports = {
-  InfoMessages: InfoMessages,
+  infoMessages: infoMessages,
 };

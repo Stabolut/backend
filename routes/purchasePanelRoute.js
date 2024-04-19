@@ -3,15 +3,17 @@ const httpErrorHandler = require("../error/httpErrorHandler");
 const {
   getDepositAddress,
   purchaseUSBWithEther,
-  purchaseUSBWithBtc
+  purchaseUSBWithBtc,
+  checkUserWalletExistence
 } = require("../controller/purcahsePanel");
 
 const {
   getDepositAddressValidation,
   purchaseUSBValidation,
+  checkWalletAddressValidation
 } = require("../validation/adminRouteValidation");
 
-const { validateRequest } = require("../middlewares/validate-request");
+const { validateRequest } = require("../middlewares/validateRequest");
 const route = require("./route");
 
 router.get(
@@ -34,5 +36,14 @@ router.post(
   validateRequest,
   httpErrorHandler(purchaseUSBWithBtc)
 );
+
+router.post(
+  route.CHECK_USER_WALLET_EXISTANCE,
+  checkWalletAddressValidation(),
+  validateRequest,
+  httpErrorHandler(checkUserWalletExistence)
+
+);
+
 
 module.exports = router;

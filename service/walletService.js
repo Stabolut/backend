@@ -1,7 +1,7 @@
 // Import necessary modules and models
 const { ApiError } = require("@google-cloud/storage/build/src/nodejs-common");
-const { ErrorMessages } = require("../constants/errors");
-const WalletModel = require("../models/WalletModel");
+const { errorMessages } = require("../constants/errors");
+const WalletModel = require("../models/walletModel");
 const { getTokenBalance } = require("../utils/wallet");
 const TransactionModel = require("../models/TransactionModel");
 const { sendNotification } = require("../NotificationService");
@@ -73,7 +73,7 @@ transferTokens = async (req) => {
 
   if (!isValidEthereumAddress(body.toAddress))
     throw new ApiError(
-      ErrorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
       400
     );
 
@@ -220,7 +220,7 @@ updateTransactionStatus = async (req) => {
 
   if (!wallet)
     throw new ApiError(
-      ErrorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash)
+      errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash)
     );
 
   if (status === 1) {

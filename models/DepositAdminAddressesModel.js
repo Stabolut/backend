@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the DepositAdminModel document
-const DepositAdminModelSchema = new Schema({
+const depositAdminModelSchema = new Schema({
   // Field to store the deposit address
   depositAddress: {
     type: String,
@@ -21,10 +21,10 @@ const DepositAdminModelSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let DepositAdminModel = mongoose.model(
+let depositAdminModel = mongoose.model(
   "deposit_admin_address",
-  DepositAdminModelSchema
+  depositAdminModelSchema
 );
 
 // Exporting the model for use in other parts of the application
-module.exports = DepositAdminModel;
+module.exports = depositAdminModel;

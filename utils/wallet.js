@@ -166,6 +166,25 @@ const signAndSendTransaction = async (rawTx, privateKey) => {
         }
 }
 
+const signAndSendTransactionOnPurchase = async (rawTx, privateKey) => {
+
+        try {
+                var privateKey = Buffer.from(privateKey, "hex");
+
+                var tx = new Tx(rawTx);
+                tx.sign(privateKey);
+                var serializedTx = tx.serialize();
+                const hash = await web3.eth.sendSignedTransaction(
+                        "0x" + serializedTx.toString("hex")
+                );
+
+                return { status: true, hash };
+        } catch (e) {
+                console.log("Errr in signed transaction", e, e.message);
+                return { statu: false }
+
+        }
+};
 
 
 
@@ -182,6 +201,7 @@ module.exports = {
         signAndSendTransaction,
         transferPreSignedHex,
         getGasPrice,
-        mint
+        mint,
+        signAndSendTransactionOnPurchase
 }
 

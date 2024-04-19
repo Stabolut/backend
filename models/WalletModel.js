@@ -4,16 +4,13 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the Wallet document
-const WalletSchema = new Schema({
+const walletSchema = new Schema({
   // Field to store the account associated with the wallet
   account: {
     type: String,
     required: true,
   },
-  // Field to store the BTC wallet address
-  btcWallet: {
-    type: String,
-  },
+
   // Field to store an array of tokens associated with the wallet
   tokenArray: [
     {
@@ -32,7 +29,7 @@ const WalletSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let WalletModel = mongoose.model("wallet", WalletSchema);
+let walletModel = mongoose.model("wallet", walletSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = WalletModel;
+module.exports = walletModel;

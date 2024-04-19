@@ -6,7 +6,7 @@ const {
   contactUsValidation,
   subscribeValidation,
 } = require("../validation/validation");
-const { validateRequest } = require("../middlewares/validate-request");
+const { validateRequest } = require("../middlewares/validateRequest");
 const route = require("./route");
 
 router.post(

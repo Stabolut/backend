@@ -1,95 +1,95 @@
 const { body } = require("express-validator");
-const { ErrorMessages } = require("../constants/errors");
+const { errorMessages } = require("../constants/errors");
 
 const subscribeValidation = () => [
   body("email")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("email"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("email"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("email"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("email"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("email")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("email")
     )
     .bail()
     .custom((value) => validateEmail(value))
-    .withMessage(ErrorMessages.AUTH.VALIDATION_FAILED("Email")),
+    .withMessage(errorMessages.AUTH.VALIDATION_FAILED("Email")),
 
   body("name")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("name"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("name"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("name"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("name"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("name")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("name")
     ),
 
   body("cname")
     .exists()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("Company name")
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("Company name")
     )
     .bail()
     .not()
     .isEmpty()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("Company name")
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("Company name")
     )
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("Company name")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("Company name")
     ),
 ];
 
 const contactUsValidation = () => [
   body("email")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("email"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("email"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("email"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("email"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("email")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("email")
     )
     .bail()
     .custom((value) => validateEmail(value))
-    .withMessage(ErrorMessages.AUTH.VALIDATION_FAILED("Email")),
+    .withMessage(errorMessages.AUTH.VALIDATION_FAILED("Email")),
 
   body("name")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("name"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("name"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("name"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("name"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("name")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("name")
     ),
 
   body("message")
     .exists()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("message"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("message"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(ErrorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("message"))
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("message"))
     .bail()
     .isString()
     .withMessage(
-      ErrorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("message")
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("message")
     ),
 ];
 function validateEmail(email) {
