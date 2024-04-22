@@ -29,18 +29,22 @@ const assingUsernameToWalletValidation = () => [
     .withMessage(
       errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("accountID")
     ),
+
   body("username")
     .exists()
     .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("username"))
     .bail()
     .not()
     .isEmpty()
-    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("username"))
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("username")
+    )
     .bail()
     .isString()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("username")
-    ),
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("username"))
+    .bail().custom((value) => validateUsername(value))
+    .withMessage(errorMessages.AUTH.INVALID_USERNAME("username")),
+
 ];
 
 const addContactListValidation = () => [
@@ -110,6 +114,12 @@ const getContactListValidation = () => [
       errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("account")
     ),
 ];
+
+function validateUsername(username) {
+  //const re = /^(?!.*[_\s-]{2,})[a-zA-Z0-9][a-zA-Z0-9_\-]*[a-zA-Z0-9]$/
+  const re = /^[a-zA-Z]([.@_-]?[a-zA-Z0-9]+)*$/;
+  return re.test(String(username));
+}
 
 module.exports = {
   retrieveUserByWalletOrUsernameValidation,

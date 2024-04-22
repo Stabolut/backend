@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the Subscribe document
-const SubscribeSchema = new Schema({
+const subscribeSchema = new Schema({
   // Field to store the email address
   email: {
     type: String,
@@ -34,7 +34,7 @@ const SubscribeSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let SubscribeModel = mongoose.model("subscribe", SubscribeSchema);
+let subscribeModel = mongoose.model("subscribe", subscribeSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = SubscribeModel;
+module.exports = subscribeModel;

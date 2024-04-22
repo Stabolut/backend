@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the AutomateStake document
-const AutomateStakeSchema = new Schema({
+const automateStakeSchema = new Schema({
   // Field to store the wallet address
   wallet: {
     type: String,
@@ -48,7 +48,7 @@ const AutomateStakeSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let AutomateStakeModel = mongoose.model("auto_stake", AutomateStakeSchema);
+let automateStakeModel = mongoose.model("auto_stake", automateStakeSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = AutomateStakeModel;
+module.exports = automateStakeModel;

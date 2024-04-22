@@ -50,7 +50,7 @@ const transactionSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let TransactionModel = mongoose.model("transaction", transactionSchema);
+let transactionModel = mongoose.model("transaction", transactionSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = TransactionModel;
+module.exports = transactionModel;

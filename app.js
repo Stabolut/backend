@@ -20,13 +20,12 @@ const connectToMongo = require("./connection/db");
 const newWeb3Connection = require("./connection/blockchain");
 const { ethToUsbTokenExchangeService } = require("./workers/ethToUsbTokenExchangeService")
 const { btcToUsbTokenExchangeService } = require("./workers/btcToUsbTokenExchangeService")
-// Custom modules and services
-const runScript = require("./web3");
-const { stakingService } = require("./services/stake");
-const { stakingRewardService } = require("./services/sendReward");
+const { automatedWalletStakingService } = require("./workers/automatedWalletStakingService")
+const { stakingRewardService } = require("./workers/stakingRewardService")
+const { transactionListener } = require("./workers/transactionListener")
 const { MONGO_URL, RPC_URI } = require("./config");
 const router = require("./routes/index");
-const socketIO = require("./socket");
+const socketIO = require("./workers/socketService");
 const { constant } = require("./constants/constant");
 
 const app = express();
@@ -86,6 +85,10 @@ connectToMongo();
 
 // Connect to Web3 blockchain
 newWeb3Connection();
+app.get(constant.api.prefix, (req, res) => {
+  res.send("Node version 1 is running")
+
+})
 
 // Define API routes
 app.use(constant.api.prefix, router);
@@ -99,11 +102,11 @@ const httpServer = http.createServer(app);
 socketIO(httpServer);
 
 // Run scripts for various services
-// runScript();
-// stakingService();
+// transactionListener();
+//automatedWalletStakingService();
 // stakingRewardService();
-ethToUsbTokenExchangeService()
-btcToUsbTokenExchangeService()
+//  ethToUsbTokenExchangeService()
+// btcToUsbTokenExchangeService()
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {

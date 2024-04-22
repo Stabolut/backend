@@ -8,7 +8,7 @@ createAndEncryptWallet = async () => {
 
   try {
     let { data } = await axios.post(`${BITCOIN_NODE_URI}/addrs?token=${BITCOIN_TOKEN}`)
-    console.log("wallet", data)
+   
     var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
     return ciphertext
   }

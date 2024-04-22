@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the User document
-const UserSchema = new Schema({
+const userSchema = new Schema({
   // Field to store the user's account
   account: {
     type: String,
@@ -23,7 +23,7 @@ const UserSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let UserModel = mongoose.model("user", UserSchema);
+let userModel = mongoose.model("user", userSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = UserModel;
+module.exports = userModel;

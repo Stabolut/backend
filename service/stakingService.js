@@ -1,5 +1,5 @@
 // Import required modules and models
-const AutomateStakeModel = require("../models/AutomateStakeModel");
+const AutomateStakeModel = require("../models/automateStakeModel");
 const { isEmpty } = require("lodash");
 const {
   getGasPrice,
@@ -7,7 +7,7 @@ const {
   signAndSendTransaction,
   transferPreSignedHex,
 } = require("../utils/wallet");
-const StakeModel = require("../models/StakeModel");
+const StakeModel = require("../models/stakeModel");
 const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
 
 /**

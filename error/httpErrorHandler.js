@@ -2,7 +2,7 @@ const { sendErrorResponse } = require("../utils/responses");
 
 const httpErrorHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch((err) => {
-    console.log("Error",err)
+  
     const { status, message, data } = err;
     return sendErrorResponse(
       res,

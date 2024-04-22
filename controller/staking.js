@@ -21,6 +21,7 @@ addInStake = async (req, res) => {
 
 // Function to get stake details
 getInStake = async (req, res) => {
+  
   // Call the getStakeList function from the stakingService module and await its response
   let stakeList = await stakingService.getStakeList(req);
 

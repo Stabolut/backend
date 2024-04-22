@@ -5,13 +5,13 @@ const {
   FUNDING_ADDRESS,
   SOCKET_URI,
   ABI,
-} = require("./config");
-const TransactionModel = require("./models/TransactionModel");
+} = require("../config");
+const transactionModel = require("../models/transactionModel");
 
 /**
  * Function to listen for contract events and save transactions
  */
-const runScript = () => {
+const transactionListener = () => {
   // Creating a new instance of Web3 with WebSocket provider
   const web3 = new Web3(new Web3.providers.WebsocketProvider(SOCKET_URI));
 
@@ -26,13 +26,14 @@ const runScript = () => {
         console.error(error);
         return;
       }
+    
 
       // Initializing transaction type
       let transactionTransferType = "Transfer";
       let transaction;
 
       // Finding existing transaction in the database
-      let findTransaction = await TransactionModel.findOne({
+      let findTransaction = await transactionModel.findOne({
         senderAddress: event?.returnValues?.from,
         receiverAddress: event?.returnValues?.to,
         amountToSend: parseFloat(event?.returnValues?.value) / 1e2,
@@ -66,7 +67,7 @@ const runScript = () => {
         }
 
         // Saving the new transaction to the database
-        const newTransaction = new TransactionModel(transaction);
+        const newTransaction = new transactionModel(transaction);
         await newTransaction.save();
         console.log("Transaction saved in script");
       }
@@ -75,6 +76,4 @@ const runScript = () => {
     console.log("Run script failed", e);
   }
 };
-
-// Exporting the runScript function for use in other parts of the application
-module.exports = runScript;
+module.exports = { transactionListener };

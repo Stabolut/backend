@@ -60,7 +60,7 @@ const USBUserModleSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let UserModelUSB = mongoose.model("user_USB", USBUserModleSchema);
+let userModelUSB = mongoose.model("user_USB", USBUserModleSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = UserModelUSB;
+module.exports = userModelUSB;

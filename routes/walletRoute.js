@@ -3,7 +3,11 @@ const httpErrorHandler = require("../error/httpErrorHandler");
 const {
   createWallet,
   addWallet,
+  transactionsListWithLimit,
   transferTokens,
+  updateTransactionStatus,
+  mintCoin,
+  transactionsList
 } = require("../controller/wallet");
 
 const {
@@ -25,8 +29,8 @@ router.post(
 
 router.post(
   route.TOKEN_TRANSFER,
-  transferTokenValidation(),
-  validateRequest,
+   transferTokenValidation(),
+   validateRequest,
   httpErrorHandler(transferTokens)
 );
 
@@ -50,5 +54,18 @@ router.post(
   validateRequest,
   httpErrorHandler(updateTransactionStatus)
 );
+
+router.post(
+  route.UPDATE_TRANSACTION_STATUS,
+  transactionStatusUpdateStatus(),
+  validateRequest,
+  httpErrorHandler(updateTransactionStatus)
+);
+
+
+router.post(route.MINT_COIN,
+  walletAddressValidation(),
+  validateRequest,
+  httpErrorHandler(mintCoin));
 
 module.exports = router;

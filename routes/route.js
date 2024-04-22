@@ -11,6 +11,7 @@ module.exports = {
   TRANSACTIONS_LIST: "/transacions-list",
   TRANSACTIONS_LIST_WITH_LIMIT: "/transacions-list-with-limit",
   UPDATE_TRANSACTION_STATUS: "/update-transaction-status",
+  MINT_COIN:"/mint-coin",
   //User Route
   RETRIEVE_USER_BY_WALLET_ADDRESS_OR_USERNAME:
     "/retrieve-user-by-wallet-or-username",
@@ -19,9 +20,9 @@ module.exports = {
   GET_CONTACT_LIST: "/get-contact-list",
   // Staking Route
   ADD_IN_STAKE: "/add-in-stake",
-  GET_IN_STAKE: "get-in-stake",
-  STAKE_TRANSACTION: "stake-transaction",
-  STAKE_REWARD: "stake-reward",
+  GET_IN_STAKE: "/get-in-stake",
+  STAKE_TRANSACTION: "/stake-transaction",
+  STAKE_REWARD: "/stake-reward",
   // general Route
   CONTACT_US_EMAL: "/contact-us-email",
   SUBSCRIBE: "/subscribe",

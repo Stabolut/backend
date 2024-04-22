@@ -1,10 +1,11 @@
 // Importing required modules and models
-const UserModel = require("../models/UserModel");
+const userModel = require("../models/userModel");
 const { isValidEthereumAddress } = require("../utils/wallet");
 const { errorMessages } = require("../constants/errors");
-const ContactListModel = require("../models/ContactList");
+const contactListModel = require("../models/contactListModel");
 const { infoMessages } = require("../constants/messages");
 const ApiError = require("../error/apiError");
+const apiError = require("../error/apiError");
 
 /**
  * Retrieves a user by their wallet account or username.
@@ -13,8 +14,9 @@ const ApiError = require("../error/apiError");
  * @returns {object} An object containing the message and data of the retrieved user.
  */
 const retrieveUserByWalletOrUsername = async (req, res) => {
-  const existingUser = await UserModel.findOne({
-    $or: [{ account: req.body.userID }, { username: req.body.userID }],
+
+  const existingUser = await userModel.findOne({
+    $or: [{ account: req.body.userID }, { username: req.body.userID.toLowerCase() }],
   });
 
   if (existingUser) {
@@ -38,22 +40,31 @@ const retrieveUserByWalletOrUsername = async (req, res) => {
  * @throws {ApiError} If username already exists for the given account.
  */
 const assignUsernameToWallet = async (req, res) => {
-  const existingUser = await UserModel.findOne({ account: req.body.accountID });
 
-  if (existingUser) {
-    throw new ApiError(
-      `Username already exists for this account: ${existingUser.username}`,
-      404
-    );
-  } else {
-    // Create a new user with the provided username and account
-    const newUser = new UserModel({
-      account: req.body.accountID,
-      username: req.body.username,
+  const usernameExist = await userModel.findOne({ username: req.body.username.toLowerCase() });
+  if (usernameExist) throw new apiError(errorMessages.AUTH.USERNAME_ALREADY_EXIST(req.body.username))
+
+  const accountExist = await userModel.findOne({ account: req.body.accountID });
+
+  if (accountExist) {
+
+    await userModel.updateOne({ account: req.body.accountID }, {
+      $set: { username: req.body.username.toLowerCase() }
     });
-    await newUser.save();
-    return;
+
+    return
+
   }
+
+
+  // Create a new user with the provided username and account
+  const newUser = new userModel({
+    account: req.body.accountID,
+    username: req.body.username.toLowerCase(),
+  });
+  await newUser.save();
+  return;
+
 };
 
 /**
@@ -70,24 +81,38 @@ const addContactList = async (req, res) => {
   if (!isValidEthereumAddress(req.body.senderAccount))
     throw new ApiError(errorMessages.USER.INVALID_ADDRESS("Sender"), 404);
 
-  // Check if the contact already exists
-  const accountExist = await ContactListModel.findOne({
+  // // Check if the contact already exists
+  const accountExist = await contactListModel.findOne({
     receiver_account: req.body.receiverAccount,
     sender_account: req.body.senderAccount,
   });
 
   if (accountExist) {
     throw new ApiError(
-      `Contact already exists with this name: ${accountExist.name}`,
+      `Contact already exists with this address: ${req.body.receiverAccount}`,
       404
     );
   }
 
+  // Check if the contact already exists
+  const nameExist = await contactListModel.findOne({
+    sender_account: req.body.senderAccount,
+    name: req.body.name.toLowerCase(),
+  });
+
+  if (nameExist) {
+    throw new ApiError(
+      `Contact already exists with this name: ${nameExist.name}`,
+      404
+    );
+  }
+
+
   // Create and save the new contact
-  const newContact = new ContactListModel({
+  const newContact = new contactListModel({
     receiver_account: req.body.receiverAccount,
     sender_account: req.body.senderAccount,
-    name: req.body.name,
+    name: req.body.name.toLowerCase(),
   });
   await newContact.save();
   return newContact;
@@ -100,7 +125,8 @@ const addContactList = async (req, res) => {
  * @returns {object[]} An array containing the contact list information.
  */
 const getContactListInfo = async (req, res) => {
-  const contactList = await ContactListModel.find({
+
+  const contactList = await contactListModel.find({
     sender_account: req.body.account,
   }).sort({ "timestamps.created_At": -1 });
   return contactList;

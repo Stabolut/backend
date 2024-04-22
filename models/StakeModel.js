@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the Stake document
-const StakeSchema = new Schema({
+const stakeSchema = new Schema({
   // Field to store the wallet address
   wallet: {
     type: String,
@@ -33,7 +33,7 @@ const StakeSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let StakeModel = mongoose.model("stake", StakeSchema);
+let stakeModel = mongoose.model("stake", stakeSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = StakeModel;
+module.exports = stakeModel;

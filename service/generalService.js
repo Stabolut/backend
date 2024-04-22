@@ -1,7 +1,7 @@
 // Import required modules and models
 const emailUtility = require("../utils/emailUtility");
 const config = require("../config");
-const SubscribeModel = require("../models/SubscribeUserMode");
+const SubscribeModel = require("../models/subscribeUserMode");
 const ApiError = require("../error/apiError");
 
 /**

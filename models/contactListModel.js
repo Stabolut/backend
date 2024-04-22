@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Define the schema for the ContactList document
-const ContactListSchema = new Schema({
+const contactListSchema = new Schema({
   // Field to store the receiver's account
   receiver_account: {
     type: String,
@@ -29,7 +29,7 @@ const ContactListSchema = new Schema({
 });
 
 // Creating a model based on the schema
-let ContactListModel = mongoose.model("contact_list", ContactListSchema);
+let contactListModel = mongoose.model("contact_list", contactListSchema);
 
 // Exporting the model for use in other parts of the application
-module.exports = ContactListModel;
+module.exports = contactListModel;

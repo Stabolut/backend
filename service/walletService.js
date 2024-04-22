@@ -1,10 +1,9 @@
 // Import necessary modules and models
-const { ApiError } = require("@google-cloud/storage/build/src/nodejs-common");
 const { errorMessages } = require("../constants/errors");
-const WalletModel = require("../models/walletModel");
+const walletModel = require("../models/walletModel");
 const { getTokenBalance } = require("../utils/wallet");
-const TransactionModel = require("../models/TransactionModel");
-const { sendNotification } = require("../NotificationService");
+const transactionModel = require("../models/transactionModel");
+const { sendNotificationService } = require("../workers/sendNotificationService")
 const {
   isValidEthereumAddress,
   getGasPrice,
@@ -12,9 +11,10 @@ const {
   signAndSendTransaction,
   transferPreSignedHex,
 } = require("../utils/wallet");
-const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
+const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ABI } = require("../config");
 const _ = require("lodash");
-const { createWallet } = require("../utils/wallet");
+const { createWallet, signAndSendTransactionOnPurchase } = require("../utils/wallet");
+const apiError = require("../error/apiError");
 
 /**
  * Creates a new wallet for a user.
@@ -31,23 +31,29 @@ createUserWallet = async () => {
  * @returns {string} A message indicating the success or failure of the operation.
  */
 addWallet = async (req) => {
-  const existingWallet = await WalletModel.findOne({
+  const existingWallet = await walletModel.findOne({
     account: req.body.account,
   });
+ 
+
 
   if (existingWallet) {
+    
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
+   
+
       return "Token already exists in the TokenArray";
     } else {
+     
       existingWallet.tokenArray.push({ token: req.body.token });
       existingWallet.save();
       return "Token does not exist in the TokenArray, so add it.";
     }
   } else {
-    let balance = await getTokenBalance(req.body.account);
-    const newWallet = new WalletModel({
+   
+
+    const newWallet = new walletModel({
       account: req.body.account,
-      balance: parseFloat(balance / 1e2),
       tokenArray: [{ token: req.body.token }],
     });
     newWallet.save();
@@ -61,6 +67,8 @@ addWallet = async (req) => {
  * @returns {Object} The transaction hash of the transfer.
  */
 transferTokens = async (req) => {
+ 
+
   const body = _.pick(req.body, [
     "signature",
     "toAddress",
@@ -70,9 +78,9 @@ transferTokens = async (req) => {
     "originalAmount",
     "transNotes",
   ]);
-
+  
   if (!isValidEthereumAddress(body.toAddress))
-    throw new ApiError(
+    throw new apiError(
       errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
       400
     );
@@ -109,13 +117,13 @@ transferTokens = async (req) => {
   const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
 
   // Send notification to the recipient
-  let token = await WalletModel.findOne({ account: body.toAddress });
+  let token = await walletModel.findOne({ account: body.toAddress });
 
   if (token) {
     let receiveTokenArray = token.tokenArray;
     for (var i = 0; i < receiveTokenArray.length; i++) {
       if (receiveTokenArray[i].token)
-        sendNotification(
+        sendNotificationService(
           receiveTokenArray[i].token,
           `You received ${body.originalAmount} USB from ${body.senderAddress}`,
           "Received USB",
@@ -126,13 +134,14 @@ transferTokens = async (req) => {
   }
 
   // Save transaction details
-  let findTransaction = await TransactionModel.findOne({
+  let findTransaction = await transactionModel.findOne({
     senderAddress: body.senderAddress,
     receiverAddress: body.toAddress,
     amountToSend: body.amount / 1e2,
     transactionHash: hash.transactionHash,
   });
 
+  
   if (!findTransaction) {
     let transaction = {
       senderAddress: body.senderAddress,
@@ -143,7 +152,7 @@ transferTokens = async (req) => {
       transactionNotes: body.transNotes,
     };
 
-    const newTransaction = new TransactionModel(transaction);
+    const newTransaction = new transactionModel(transaction);
     await newTransaction.save();
   }
 
@@ -158,7 +167,7 @@ transferTokens = async (req) => {
 transactionsList = async (req) => {
   const { walletAddress } = req.body;
 
-  let wallet = await TransactionModel.find({
+  let wallet = await transactionModel.find({
     $and: [
       {
         $or: [
@@ -181,7 +190,7 @@ transactionsList = async (req) => {
 transactionsListWithLimit = async (req) => {
   const { walletAddress } = req.body;
 
-  let wallet = await TransactionModel.find({
+  let wallet = await transactionModel.find({
     $and: [
       {
         $or: [
@@ -203,8 +212,9 @@ transactionsListWithLimit = async (req) => {
  * @param {Object} req - The request object containing wallet address, transaction hash, and status.
  */
 updateTransactionStatus = async (req) => {
+
   const { walletAddress, transactionHash, status } = req.body;
-  let wallet = await TransactionModel.findOne({
+  let wallet = await transactionModel.findOne({
     $and: [
       {
         $or: [
@@ -218,12 +228,14 @@ updateTransactionStatus = async (req) => {
     ],
   });
 
+  console.log("Wallet found")
   if (!wallet)
-    throw new ApiError(
+    throw new apiError(
       errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash)
     );
 
   if (status === 1) {
+    console.log("Found")
     wallet.transactionStatus = "Success";
   } else if (status === 0) {
     wallet.transactionStatus = "Fail";
@@ -231,6 +243,39 @@ updateTransactionStatus = async (req) => {
   wallet.save();
   return;
 };
+
+
+
+mintCoin = async (req) => {
+
+  let gasLimit = 21000000;
+  let gasPrice = (await getGasPrice()) * 2;
+  const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
+  const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+  let tx1 = await contract.methods.mint(
+    req.body.walletAddress,
+    parseInt(req.body.amount * 1e2)
+  );
+  const encoded_tx = tx1.encodeABI();
+
+  let transactionObject = {
+    nonce: web3.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: web3.utils.toHex(gasPrice),
+    gasLimit: web3.utils.toHex(gasLimit),
+    to: CONTRACT_ADDRESS,
+    data: encoded_tx,
+
+  };
+  await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
+  return 'Coin send successfully'
+
+
+}
+
+
+
 
 // Export the controller functions
 module.exports = {
@@ -240,4 +285,5 @@ module.exports = {
   transactionsList,
   transactionsListWithLimit,
   updateTransactionStatus,
+  mintCoin
 };

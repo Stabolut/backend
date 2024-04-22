@@ -15,18 +15,18 @@ const addWalletValidation = () => [
       errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("account")
     ),
 
-  body("token")
-    .exists()
-    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("token"))
-    .bail()
-    .not()
-    .isEmpty()
-    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("token"))
-    .bail()
-    .isString()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("token")
-    ),
+  // body("token")
+  //   .exists()
+  //   .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("token"))
+  //   .bail()
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("token"))
+  //   .bail()
+  //   .isString()
+  //   .withMessage(
+  //     errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("token")
+  //   ),
 ]
 
 const transferTokenValidation = () => [
@@ -63,11 +63,7 @@ const transferTokenValidation = () => [
     .not()
     .isEmpty()
     .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("amount"))
-    .bail()
-    .isString()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("amount")
-    ),
+    .bail(),
 
   body("nonce")
     .exists()
@@ -76,11 +72,7 @@ const transferTokenValidation = () => [
     .not()
     .isEmpty()
     .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("nonce"))
-    .bail()
-    .isString()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("nonce")
-    ),
+    .bail(),
 
   body("originalAmount")
     .exists()
@@ -124,12 +116,6 @@ const transferTokenValidation = () => [
     .exists()
     .withMessage(
       errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("transNotes")
-    )
-    .bail()
-    .not()
-    .isEmpty()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("transNotes")
     )
     .bail()
     .isString()

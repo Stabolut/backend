@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "com-stabolut-usb",
+  "private_key_id": "d3d6f4542ea7b9c7bd0519a6d16f293ada97cf54",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC7ChmcEfnJM+TB\n6AUxsainL2QJnPbrecDcnzBYzo943wrB1h6/NUJtiHdWjX6N40CNGvT2Xpa91Xlc\ntCfY7iePwcjKBaKaQTriFbO7R0wUB7LCHL0PZGLamJdVSkWPCtEkBQUy35L52OJH\nQuE9No2KczjbNqoNVS3IcRmnjPSLeqCkGCPaHUelMs3AFqvj+C4v6SeRy+EtSS7z\n9Tcg0I4gsoh4EefLVvys7nbsvbrKpOtwlXQCzF7LQMO2P5Vt2gsCG/4chTlHiYGQ\nf2LDpxLEbRk1b9OtJkbiD4xqkAJ19EUaUXp4H/yqgxFYqEZEneYEQYuh2HX6IfZR\nl5tqLm5ZAgMBAAECggEAAaUl2NXTAQwcDQDWl8QwVXORvClGQEHUdiOVH2SpK7Yy\nsN1b4V+dZB54aPgMORJmbJuqEVLFKT5Urup9Asfs7EqFzO655HjZofx8G3bhdf3p\ny/sOUgMK3gAGROmHB2pOsO4eSHlV/YotnD0qd5fMISKvWqIQefnc42KaXzsmRQjH\nO3pzTadPjtxgeBEYAEe7D53ntsll7SPRFBeodT+4jNfs4rhh6wrfkz/V0fV7kmI5\niDl2eiYpgExb5rAcARdVuXwN+Y9Dp7NTp+rqd5gDXkJsqJDsnxdktL1nl97QKQ/N\nTV6n2+TuolAp3pDuD7YVhs0e9W66ZUMlQKspPnQWoQKBgQD1gE2q6B5SD+ePWWer\nuvKapLDeoU3XBQjkkIxPISM9JbVVXwesKW7n5cGrdwJYNZ0HMLytH2KoeAWT0STV\nMi6syPDuT299z6TzyeXspnxCO427meRHCVw5RXmI0cWkoRG9yK0Sfi909PT5rBhD\niNaex4FnUCRbfLdbViuU6O5ACQKBgQDDCcUEnNExR8PLbnpnYZ0b7GohfWMqyuj5\n5KHM/+4+719Om8MfrTkcCpF8gnJI6c4fs8CGDxYC3wblLsBuH+xe9aZ7b/UgPy+P\nt1i+L9lOhWQ7WDSNKvQ+LsVI/P1DolVcjrdUqmKNotnX7D2H7z2o2fiez0OETcHT\niZid4Dav0QKBgQCrl70xmsIum30/Xb8vciDF5BzXzyjoBFXd5Aad/Ex0HdorzJtB\nQ0iIf7epUCpsWzThZLhLzScZF6LWWZWECmpDTMPR3eXQqwThfRnfGdK6PIPpPzwm\nRq2WPjAfaHfbhNUwsIX/6gDjn59mr1naQle4bTvOaV6wL3C9P3KAx3pXeQKBgGTj\nr9uT9w6D7f9UldLWhrvEDp5mSx7+uYdSwnPVy/sYPffe0Q+YvpsHyHxcyht3fl2d\n0TBHq34uulVhWr9cmhwA/G6L2oQky0iPckNnYwSgMdoU5ZJErvVfokQAQk5zMa7g\nUGtme/aCUCfGl4mysvWeU2JrGqTcyC/R1HWOXxuRAoGBAKor3EBK/7Rlemp1352g\npdu5bjBoGqOsY5RqlliP2IpZOivFiUQhmNPaAuQTgptpRM07GOGYqIIflmgQkxL4\nI+xlc+f3xsih0QscwqWmMO1GJHv+f+FhHHwT3EurO+F/YhHyPsI3xZIJi3irtgcw\nx8rfxAcJXzwTH0ycxVx66+Bh\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-pifhm@com-stabolut-usb.iam.gserviceaccount.com",
+  "client_id": "112034067025421366761",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-pifhm%40com-stabolut-usb.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

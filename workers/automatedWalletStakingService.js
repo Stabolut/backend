@@ -1,9 +1,10 @@
-const WalletModel = require("../models/walletModel");
+const walletModel = require("../models/walletModel");
 const { getTokenBalance } = require("../utils/wallet");
-const AutomateStakeModel = require("../models/AutomateStakeModel");
+const automateStakeModel = require("../models/automateStakeModel");
 const axios = require("axios");
 
 const runTask = async () => {
+    console.log("automated staking reward service started...");
   // Your task to be executed every 1 minute
   // get user wallet
   try {
@@ -17,9 +18,9 @@ const runTask = async () => {
       if (data.length > 0) {
         percentage = data[0].fundingRateDaily * 3;
       }
-    } catch (e) {}
+    } catch (e) { }
 
-    const walletList = await WalletModel.find({});
+    const walletList = await walletModel.find({});
 
     if (walletList.length > 0) {
       for (var i = 0; i < walletList.length; i++) {
@@ -27,7 +28,7 @@ const runTask = async () => {
 
         //If user current balance is
         if (walletList[i].balance >= parseFloat(balance / 1e2)) {
-          const stake = new AutomateStakeModel({
+          const stake = new automateStakeModel({
             wallet: walletList[i].account,
             stakeAmount: walletList[i].balance,
             rewardPercentage,
@@ -35,7 +36,7 @@ const runTask = async () => {
             rewardAmount: (walletList[i].balance * percentage) / 100,
           });
           await stake.save();
-          await WalletModel.updateOne(
+          await walletModel.updateOne(
             { _id: walletList[i]._id },
             {
               $set: {
@@ -56,7 +57,7 @@ const runTask = async () => {
   }
 };
 
-const stakingService = () => {
+const automatedWalletStakingService = () => {
   const now = new Date();
   const targetTime = new Date(
     now.getFullYear(),
@@ -72,7 +73,6 @@ const stakingService = () => {
     targetTime.setDate(targetTime.getDate() + 1);
   }
   const initialDelay = targetTime - now; // Calculate the initial delay until midnight
-  console.log("initialDelay", initialDelay);
   const interval = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
   // const initialDelay = 0.15 * 60 * 1000; // Initial delay in milliseconds (2 minutes)
@@ -88,4 +88,4 @@ const stakingService = () => {
   }, initialDelay);
 };
 
-module.exports = { stakingService };
+module.exports = { automatedWalletStakingService };

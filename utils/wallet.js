@@ -83,7 +83,7 @@ const transferPreSignedHex = async (signature, to, value, nonce) => {
 }
 
 const mint = async (to, value) => {
-        console.log("catch", to, value)
+       
         try {
                 const contract = await new global.web3.eth.Contract(ABI, CONTRACT_ADDRESS);
                 const tx_builder = await contract.methods.mint(to, value);

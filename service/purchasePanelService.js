@@ -191,8 +191,7 @@ const purchaseUSBWithEther = async (req) => {
  */
 const purchaseUSBWithBtc = async (req) => {
 
-  console.log("body", req.body, typeof req.body.amount)
-
+ 
   let depositAmount, usdRate, conversionApiResponse, document
   const { usbAddress, amount, hash } = req.body
 
@@ -242,7 +241,7 @@ const purchaseUSBWithBtc = async (req) => {
   try {
 
     response = await axios.get(`${BITPAY_URL}/tx/${hash}`);
-    console.log("Btc reponse", response.data, "usdRate", usdRate)
+   
 
   }
   catch (e) {

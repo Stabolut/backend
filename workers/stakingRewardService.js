@@ -1,6 +1,6 @@
-const WalletModel = require("../models/walletModel");
+
 const { mint } = require("../utils/wallet");
-const AutomateStakeModel = require("../models/AutomateStakeModel");
+const automateStakeModel = require("../models/automateStakeModel");
 const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
 const {
   isValidEthereumAddress,
@@ -12,7 +12,8 @@ const {
 
 const runTask = async () => {
   try {
-    const stakeRewardList = await AutomateStakeModel.find({
+    console.log("staking reward service started...");
+    const stakeRewardList = await automateStakeModel.find({
       $or: [{ isRewardTransfer: false }, { isRewardTransferSuccess: "Fail" }],
     });
 
@@ -20,7 +21,7 @@ const runTask = async () => {
       for (var i = 0; i < stakeRewardList.length; i++) {
         try {
           //If user current balance is
-          await AutomateStakeModel.updateOne(
+          await automateStakeModel.updateOne(
             { _id: stakeRewardList[i]._id },
             {
               $set: {
@@ -61,7 +62,7 @@ const runTask = async () => {
             transactionObject,
             FUNDING_KEY
           );
-          await AutomateStakeModel.updateOne(
+          await automateStakeModel.updateOne(
             { _id: stakeRewardList[i]._id },
             {
               $set: {
@@ -72,7 +73,7 @@ const runTask = async () => {
         } catch (e) {
           console.log("inside catch", e);
           try {
-            await AutomateStakeModel.updateOne(
+            await automateStakeModel.updateOne(
               { _id: stakeRewardList[i]._id },
               {
                 $set: {
@@ -81,7 +82,7 @@ const runTask = async () => {
                 },
               }
             );
-          } catch (e) {}
+          } catch (e) { }
         }
       }
       console.log("service complete");
@@ -95,7 +96,8 @@ const runTask = async () => {
 
 const stakingRewardService = () => {
   const initialDelay = 0.15 * 60 * 1000; // Initial delay in milliseconds (2 minutes)
-  const interval = 60 * 60 * 1000; // 1 hour in milliseconds
+  // const interval = 60 * 60 * 1000; // 1 hour in milliseconds
+  const interval = 60 * 1000;
   // Function to run the service periodically
   const runService = () => {
     runTask();
