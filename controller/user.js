@@ -1,5 +1,5 @@
 // Importing the UserRelatedService module which contains functions related to user management
-const userService = require("../service/UserRelatedService");
+const userService = require("../service/userRelatedService");
 // Importing the sendSuccessResponse function from the responses utility module
 const { sendSuccessResponse } = require("../utils/responses");
 // Importing infoMessages constant from the messages constants module
