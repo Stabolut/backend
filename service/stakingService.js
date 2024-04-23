@@ -1,5 +1,5 @@
 // Import required modules and models
-const AutomateStakeModel = require("../models/automateStakeModel");
+const automateStakeModel = require("../models/automateStakeModel");
 const { isEmpty } = require("lodash");
 const {
   getGasPrice,
@@ -7,7 +7,7 @@ const {
   signAndSendTransaction,
   transferPreSignedHex,
 } = require("../utils/wallet");
-const StakeModel = require("../models/stakeModel");
+const stakeModel = require("../models/stakeModel");
 const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
 
 /**
@@ -58,7 +58,7 @@ const addInStake = async (req, res) => {
   const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
 
   // Save stake details
-  const staking = new StakeModel({
+  const staking = new stakeModel({
     amount,
     yieldAmount,
     wallet,
@@ -76,7 +76,7 @@ const addInStake = async (req, res) => {
  * @returns {array} List of stake transactions for the specified wallet.
  */
 const getStakeList = async (req, res) => {
-  let stakeList = await StakeModel.aggregate([
+  let stakeList = await stakeModel.aggregate([
     { $match: { wallet: req.body.account } },
     { $sort: { "timestamps.created_At": -1 } },
     {
@@ -105,13 +105,13 @@ const allStakeTransactionList = async (req, res) => {
 
   // Check if query parameters are provided
   if (!isEmpty(req.query)) {
-    stakeList = await AutomateStakeModel.aggregate([
+    stakeList = await automateStakeModel.aggregate([
       { $match: { wallet: req.body.wallet } },
       { $sort: { "timestamps.created_At": -1 } },
       { $limit: parseInt(req.query.limit) },
     ]);
   } else {
-    stakeList = await AutomateStakeModel.aggregate([
+    stakeList = await automateStakeModel.aggregate([
       { $match: { wallet: req.body.wallet } },
       { $sort: { "timestamps.created_At": -1 } },
     ]);
@@ -126,7 +126,7 @@ const allStakeTransactionList = async (req, res) => {
  */
 const stakeReward = async (req, res) => {
   let totalAmount = 0;
-  let stakeList = await AutomateStakeModel.aggregate([
+  let stakeList = await automateStakeModel.aggregate([
     { $match: { wallet: req.body.wallet } },
     {
       $group: {

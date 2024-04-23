@@ -4,7 +4,6 @@ const { isValidEthereumAddress } = require("../utils/wallet");
 const { errorMessages } = require("../constants/errors");
 const contactListModel = require("../models/contactListModel");
 const { infoMessages } = require("../constants/messages");
-const ApiError = require("../error/apiError");
 const apiError = require("../error/apiError");
 
 /**
@@ -76,10 +75,10 @@ const assignUsernameToWallet = async (req, res) => {
  */
 const addContactList = async (req, res) => {
   if (!isValidEthereumAddress(req.body.receiverAccount))
-    throw new ApiError(errorMessages.USER.INVALID_ADDRESS("Receiver"), 404);
+    throw new apiError(errorMessages.USER.INVALID_ADDRESS("Receiver"), 404);
 
   if (!isValidEthereumAddress(req.body.senderAccount))
-    throw new ApiError(errorMessages.USER.INVALID_ADDRESS("Sender"), 404);
+    throw new apiError(errorMessages.USER.INVALID_ADDRESS("Sender"), 404);
 
   // // Check if the contact already exists
   const accountExist = await contactListModel.findOne({
@@ -88,7 +87,7 @@ const addContactList = async (req, res) => {
   });
 
   if (accountExist) {
-    throw new ApiError(
+    throw new apiError(
       `Contact already exists with this address: ${req.body.receiverAccount}`,
       404
     );
@@ -101,7 +100,7 @@ const addContactList = async (req, res) => {
   });
 
   if (nameExist) {
-    throw new ApiError(
+    throw new apiError(
       `Contact already exists with this name: ${nameExist.name}`,
       404
     );

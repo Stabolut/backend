@@ -1,8 +1,8 @@
 // Import required modules and models
 const emailUtility = require("../utils/emailUtility");
 const config = require("../config");
-const SubscribeModel = require("../models/subscribeUserMode");
-const ApiError = require("../error/apiError");
+const subscribeModel = require("../models/subscribeUserMode");
+const apiError = require("../error/apiError");
 
 /**
  * Sends a contact email to the admin.
@@ -35,7 +35,7 @@ const contactUsEmail = async (req, res) => {
         if (error) {
           // Reject the promise with an error
           reject(
-            new ApiError("An unexpected error occurred. Please try again.", 400)
+            new apiError("An unexpected error occurred. Please try again.", 400)
           );
         } else {
           // Resolve the promise with a success message
@@ -54,15 +54,15 @@ const contactUsEmail = async (req, res) => {
  * @returns {string} Confirmation message upon successful subscription.
  */
 const subscribedEmail = async (req, res) => {
-  const existingUser = await SubscribeModel.findOne({
+  const existingUser = await subscribeModel.findOne({
     email: req.body.email,
   });
 
   if (existingUser) {
-    throw new ApiError("You have already subscribed. Thank you for joining!");
+    throw new apiError("You have already subscribed. Thank you for joining!");
   } else {
     // Create a new subscription entry
-    const newSubscribe = new SubscribeModel({
+    const newSubscribe = new subscribeModel({
       email: req.body.email,
       name: req.body.name,
       companyName: req.body.cname,
