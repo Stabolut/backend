@@ -25,7 +25,7 @@ const sendNotificationService = (userToken, body, title, subtitle = "", metaData
             notification: {
                 body: body,
                 title: title,
-                subtitle: subtitle,
+               
             },
             android: {
                 notification: {
@@ -42,8 +42,7 @@ const sendNotificationService = (userToken, body, title, subtitle = "", metaData
                     aps: {
                         alert: {
                             title: title,
-                            subtitle: subtitle,
-                            body: body,
+                           body: body,
                         },
                     },
                 },

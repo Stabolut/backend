@@ -86,7 +86,7 @@ connectToMongo();
 // Connect to Web3 blockchain
 newWeb3Connection();
 app.get(constant.api.prefix, (req, res) => {
-  res.send("Node version 4 is running")
+  res.send("Node version 5 is running")
 
 })
 
