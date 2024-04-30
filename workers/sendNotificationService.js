@@ -20,52 +20,60 @@ admin.initializeApp({
 const sendNotificationService = (userToken, body, title, subtitle = "", metaData) => {
     try {
         // Sending notification using Firebase Admin SDK
-        admin
-            .messaging()
-            .send({
-                token: userToken,
-                data: {
-                    customData: "",
-                    id: "1",
-                    ad: "",
-                    subTitle: subtitle,
+        const message = {
+            token: userToken,
+            notification: {
+                body: body,
+                title: title,
+                subtitle: subtitle,
+            },
+            android: {
+                notification: {
+                    body: body,
+                    title: title,
+                    color: "#788595",
+                    priority: "high",
+                    sound: "default",
+                    vibrateTimingsMillis: [200, 500, 800],
                 },
-                android: {
-                    notification: {
-                        body: body,
-                        title: title,
-                        color: "#788595",
-                        priority: "high",
-                        sound: "default",
-                        vibrateTimingsMillis: [200, 500, 800],
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        alert: {
+                            title: title,
+                            subtitle: subtitle,
+                            body: body,
+                        },
                     },
                 },
+            },
+        };
+
+        admin.messaging().send(message)
+            .then((response) => {
+                console.log("Successfully sent message:", response);
             })
-            .then((msg) => {
-               
-            })
-            .catch(async (err) => {
+            .catch((error) => {
+                console.error("Error sending message:", error);
                 // Handling token expiration error
-                if (err.message === "Requested entity was not found.") {
-                    console.log("Token is expired", userToken);
+                if (error.code === "messaging/invalid-registration-token" || error.code === "messaging/registration-token-not-registered") {
+                    console.log("Token is expired or invalid:", userToken);
                     // Updating the user's token array in the database to remove the expired token
-                    try {
-                        await walletModel.updateOne(
-                            { account: metaData.address },
-                            { $pull: { tokenArray: { token: userToken } } }
-                        );
-                    } catch (e) {
-                        // Error handling for database update failure
-                    }
+                    walletModel.updateOne(
+                        { account: metaData.address },
+                        { $pull: { tokenArray: { token: userToken } } }
+                    ).catch((e) => {
+                        console.error("Error updating token:", e);
+                    });
                 }
             });
     } catch (e) {
-        console.log("Error in notification service", e);
+        console.error("Error in notification service:", e);
         // Error handling for notification service failure
     }
 };
 
-// Exporting the sendNotification function for use in other parts of the application
 module.exports = {
     sendNotificationService,
 };
