@@ -4,7 +4,7 @@ const automateStakeModel = require("../models/automateStakeModel");
 const axios = require("axios");
 
 const runTask = async () => {
-    console.log("automated staking reward service started...");
+   
   // Your task to be executed every 1 minute
   // get user wallet
   try {
@@ -44,13 +44,13 @@ const runTask = async () => {
               },
             }
           );
-          console.log("complete");
+        
         } else {
-          console.log("you are not elgible for reward", walletList[i].balance);
+         
         }
       }
     } else {
-      console.log("no wallet");
+    
     }
   } catch (e) {
     console.log("there is some issue in stake service", e);

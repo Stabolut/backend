@@ -16,7 +16,7 @@ module.exports = (server) => {
 
   // Function to add a user to the usersArray or update its socketId if already exists
   const addUser = (userId, socketId) => {
-    
+
     // Remove any existing user entry with the same userId
     usersArray = usersArray.filter((item) => item.userId !== userId);
     // Add the new user entry
@@ -34,9 +34,11 @@ module.exports = (server) => {
 
     // Event listener to handle transferEvent, which is emitted when a transfer occurs
     socket.on("transferEvent", (data) => {
-    
+      console.log("Tranafer event happen")
+
       // Find the user with the receiverAddress in usersArray
       let user = getUser(data.receiverAddress);
+      console.log("User found",user)
       if (user) {
         // If the user is found, emit a getTransaction event to the corresponding client
         io.to(user.socketId).emit("getTransaction", {

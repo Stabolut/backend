@@ -13,7 +13,7 @@ const web3Usb = new Web3(RPC_URI);
 const ethToUsbTokenExchangeService = async () => {
     cron.schedule("* * * * *", async () => { // Scheduling the task to run every minute
         try {
-            console.log("Transfer token service started for eth..."); // Logging task initiation
+          
             const documents = await purchasenModel.find({ transferStatus: constant.constant.transferStatus.Pending, type: constant.constant.currencyType.eth }); // Finding pending transactions for Ethereum
 
             if (documents.length > 0) { // If pending transactions are found
@@ -68,7 +68,7 @@ const ethToUsbTokenExchangeService = async () => {
                     }
                 }
             } else {
-                console.log("No pending transactions found for ether."); // If no pending transactions are found
+               
             }
         } catch (error) {
             console.error("Error in transfer token service againt ether submit:", error); // Log any errors that occur during the process

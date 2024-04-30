@@ -10,7 +10,7 @@ const web3Usb = new Web3(RPC_URI);
 const btcToUsbTokenExchangeService = async () => {
     cron.schedule("* * * * *", async () => {
         try {
-            console.log("Transfer token service started for btc...");
+          
             const documents = await purchasenModel.find({ transferStatus: constant.constant.transferStatus.Pending, type: constant.constant.currencyType.btc });
 
             if (documents.length > 0) {
@@ -20,7 +20,7 @@ const btcToUsbTokenExchangeService = async () => {
                     const usdRate = document.conversionRate;
                     try {
                         response = await axios.get(`${BITPAY_URL}/tx/${document.transactionHash}`);
-                        console.log("response", response.data)
+                       
                     }
                     catch (e) {
                         console.log("Btc transaction not confirmed")
@@ -62,7 +62,7 @@ const btcToUsbTokenExchangeService = async () => {
                     }
                 }
             } else {
-                console.log("No pending transactions found for btc.");
+               
             }
         } catch (error) {
             console.error("Error in transfer token service against btc submit:", error);

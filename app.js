@@ -86,7 +86,7 @@ connectToMongo();
 // Connect to Web3 blockchain
 newWeb3Connection();
 app.get(constant.api.prefix, (req, res) => {
-  res.send("Node version 2 is running")
+  res.send("Node version 3 is running")
 
 })
 
@@ -105,7 +105,7 @@ socketIO(httpServer);
 transactionListener();
 automatedWalletStakingService();
 stakingRewardService();
- ethToUsbTokenExchangeService()
+ethToUsbTokenExchangeService()
 btcToUsbTokenExchangeService()
 
 // Start listening on the specified port

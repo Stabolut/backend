@@ -12,7 +12,7 @@ const {
 
 const runTask = async () => {
   try {
-    console.log("staking reward service started...");
+   
     const stakeRewardList = await automateStakeModel.find({
       $or: [{ isRewardTransfer: false }, { isRewardTransferSuccess: "Fail" }],
     });
@@ -71,7 +71,7 @@ const runTask = async () => {
             }
           );
         } catch (e) {
-          console.log("inside catch", e);
+          console.log("catch reward service", e);
           try {
             await automateStakeModel.updateOne(
               { _id: stakeRewardList[i]._id },
@@ -85,12 +85,12 @@ const runTask = async () => {
           } catch (e) { }
         }
       }
-      console.log("service complete");
+     
     } else {
-      console.log("no reward found");
+     
     }
   } catch (e) {
-    console.log("inside this", e);
+    console.log("catch reward service", e);
   }
 };
 
