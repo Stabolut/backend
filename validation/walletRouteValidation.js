@@ -1,5 +1,6 @@
 const { body } = require("express-validator");
 const { errorMessages } = require("../constants/errors");
+const validator = require('validator');
 
 const addWalletValidation = () => [
   body("account")
@@ -192,9 +193,38 @@ transactionStatusUpdateStatus = () => [
     ),
 ];
 
+
+coinMintValidation = () => [
+  body("walletAddress")
+    .exists()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("walletAddress")
+    )
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("walletAddress")
+    )
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING(
+        "walletAddress"
+      )
+    ),
+  body("amount")
+    .exists().withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("amount"))
+    .bail()
+    .notEmpty().withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("amount"))
+
+
+];
+
 module.exports = {
   addWalletValidation,
   transferTokenValidation,
   walletAddressValidation,
-  transactionStatusUpdateStatus
+  transactionStatusUpdateStatus,
+  coinMintValidation
 };

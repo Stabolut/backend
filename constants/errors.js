@@ -14,8 +14,7 @@ const errorMessages = {
     STRING_MAX_LENGTH: (key, length) =>
       `${key} must be lesser than equal to ${length} characters.`,
     MIN_MAX_LENGTH_ERROR: (value, min, max) =>
-      `${value} must be greater than ${min} character and less than ${
-        max + 1
+      `${value} must be greater than ${min} character and less than ${max + 1
       } characters.`,
     INVALID_VALUE: (value) => `Invalid ${value} value `,
     PARAM_MISSING: (param) => `Required param: ${param} is missing.`,
@@ -35,8 +34,7 @@ const errorMessages = {
     BUCKET_DELETE_ERROR: "Problem in deleting file from bucket",
     BUCKET_READ_ERROR: "Problem in reading file from bucket",
     UNSECURE_PASSWORD: (value) =>
-      `Please choose a more secure password. It should be longer than ${
-        value - 1
+      `Please choose a more secure password. It should be longer than ${value - 1
       } characters, unique to you and difficult for others to guess.`,
     USER_NOT_FOUND: "We didn't find any user against these credential",
     REQUIRED_FIELD_ERROR: (value) => `Please provide a ${value} value.`,
@@ -79,8 +77,7 @@ const errorMessages = {
 
   GENERIC_ERROR: {
     OPERATION_FAIL: (operationName, error) =>
-      `${operationName} operation fail.We are facing some internal server issues.Please try again later.${
-        error ? error : ""
+      `${operationName} operation fail.We are facing some internal server issues.Please try again later.${error ? error : ""
       }`,
     RECORD_NOT_FOUND: (record) =>
       `There is no record found against this : ${record}.`,
@@ -102,6 +99,16 @@ const errorMessages = {
 
     BTC_PEDNING_HASH_ERROR:
       "To purchase a USB using Bitcoin, you need to ensure that your Bitcoin transaction receives at least one confirmation. This means that the transaction needs to be verified by the Bitcoin network and added to the blockchain before it can be considered valid.",
+
+    WALLET_NOT_FOUND_ERROR: (record) =>
+      `There is no wallet found against this address: ${record}.`,
+
+    REACHED_LIMIT_ERROR: (val1, val2, val3) =>
+      `You can receive a maximum of ${val1} free coins. You have already received ${val2}. Your remaining limit is ${val3}.`,
+
+    MAX_FREE_COIN_LIMIT_ERROR : (val) => `You can receive a maximum of ${val} coins.`
+
+
   },
   USER: {
     INVALID_ADDRESS: (value) => `${value} address is invalid`,

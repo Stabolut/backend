@@ -15,6 +15,7 @@ const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ABI } = require("../conf
 const _ = require("lodash");
 const { createWallet, signAndSendTransactionOnPurchase } = require("../utils/wallet");
 const apiError = require("../error/apiError");
+const constant = require("../constants/constant");
 
 /**
  * Creates a new wallet for a user.
@@ -34,23 +35,23 @@ addWallet = async (req) => {
   const existingWallet = await walletModel.findOne({
     account: req.body.account,
   });
- 
+
 
 
   if (existingWallet) {
-    
+
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
-   
+
 
       return "Token already exists in the TokenArray";
     } else {
-     
+
       existingWallet.tokenArray.push({ token: req.body.token });
       existingWallet.save();
-      return "Token does not exist in the TokenArray, so add it.";
+      return "Token does not exist in the tokenArray, so add it.";
     }
   } else {
-   
+
 
     const newWallet = new walletModel({
       account: req.body.account,
@@ -67,7 +68,7 @@ addWallet = async (req) => {
  * @returns {Object} The transaction hash of the transfer.
  */
 transferTokens = async (req) => {
- 
+
 
   const body = _.pick(req.body, [
     "signature",
@@ -78,7 +79,7 @@ transferTokens = async (req) => {
     "originalAmount",
     "transNotes",
   ]);
-  
+
   if (!isValidEthereumAddress(body.toAddress))
     throw new apiError(
       errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Recipient"),
@@ -141,7 +142,7 @@ transferTokens = async (req) => {
     transactionHash: hash.transactionHash,
   });
 
-  
+
   if (!findTransaction) {
     let transaction = {
       senderAddress: body.senderAddress,
@@ -228,7 +229,6 @@ updateTransactionStatus = async (req) => {
     ],
   });
 
-  console.log("Wallet found")
   if (!wallet)
     throw new apiError(
       errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash)
@@ -276,6 +276,62 @@ mintCoin = async (req) => {
 
 
 
+getFreeCoin = async (req) => {
+
+  const { walletAddress, amount } = req.body;
+
+  console.log("amount", typeof amount)
+
+  if (!isValidEthereumAddress(walletAddress))
+    throw new apiError(
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Wallet"),
+      400
+    );
+
+
+  const existingWallet = await walletModel.findOne({
+    account: walletAddress,
+  });
+
+
+  if (!existingWallet) throw new apiError(errorMessages.ADMIN.WALLET_NOT_FOUND_ERROR(walletAddress), 400)
+  if (amount > constant.constant.freeUSBLimit) throw new apiError(errorMessages.ADMIN.MAX_FREE_COIN_LIMIT_ERROR(constant.constant.freeUSBLimit))
+  if ((amount + existingWallet.freeUSBCoinsBalance) > constant.constant.freeUSBLimit) throw new apiError(errorMessages.ADMIN.REACHED_LIMIT_ERROR(constant.constant.freeUSBLimit, existingWallet.freeUSBCoinsBalance, constant.constant.freeUSBLimit - existingWallet.freeUSBCoinsBalance))
+
+
+  let gasLimit = 21000000;
+  let gasPrice = (await getGasPrice()) * 2;
+  const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
+  const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+  let tx1 = await contract.methods.mint(
+    req.body.walletAddress,
+    parseInt(req.body.amount * 1e2)
+  );
+  const encoded_tx = tx1.encodeABI();
+
+  let transactionObject = {
+    nonce: web3.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: web3.utils.toHex(gasPrice),
+    gasLimit: web3.utils.toHex(gasLimit),
+    to: CONTRACT_ADDRESS,
+    data: encoded_tx,
+
+  };
+  await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
+
+  //store token amount in db
+  await walletModel.updateOne({ _id: existingWallet._id }, {
+    $set: { freeUSBCoinsBalance: existingWallet.freeUSBCoinsBalance + amount }
+  });
+  return 'Coin send successfully'
+
+
+}
+
+
+
 
 // Export the controller functions
 module.exports = {
@@ -285,5 +341,6 @@ module.exports = {
   transactionsList,
   transactionsListWithLimit,
   updateTransactionStatus,
-  mintCoin
+  mintCoin,
+  getFreeCoin
 };

@@ -111,6 +111,20 @@ mintCoin = async (req, res) => {
   );
 };
 
+// Function to get user by wallet
+getFreeCoin = async (req, res) => {
+  // Call the getUserByWallet function from the walletService module and await its response
+  let msg = await wallet.getFreeCoin(req);
+
+  // Send a success response with the message indicating successful retrieval of user by wallet
+  return sendSuccessResponse(
+    res,
+    msg,
+    200
+  );
+};
+
+
 // Exporting the functions so they can be used elsewhere
 module.exports = {
   createWallet,
@@ -120,5 +134,6 @@ module.exports = {
   transactionsListWithLimit,
   updateTransactionStatus,
   getUserByWallet,
-  mintCoin
+  mintCoin,
+  getFreeCoin
 };

@@ -17,7 +17,8 @@ const constant = {
     Processing: "Processing",
     Pending: "Pending",
     Success: "Success"
-  }
+  },
+  freeUSBLimit: 50,
 };
 
 module.exports = {

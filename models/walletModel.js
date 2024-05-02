@@ -21,6 +21,11 @@ const walletSchema = new Schema({
   balance: {
     type: Number,
   },
+  freeUSBCoinsBalance: {
+    type: Number,
+    default: 0
+
+  },
   // Field to store timestamps for document creation and updation
   timestamps: {
     created_At: { type: Date, default: Date.now },

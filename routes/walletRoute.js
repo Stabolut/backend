@@ -7,7 +7,8 @@ const {
   transferTokens,
   updateTransactionStatus,
   mintCoin,
-  transactionsList
+  transactionsList,
+  getFreeCoin
 } = require("../controller/wallet");
 
 const {
@@ -15,6 +16,7 @@ const {
   transferTokenValidation,
   walletAddressValidation,
   transactionStatusUpdateStatus,
+  coinMintValidation
 } = require("../validation/walletRouteValidation");
 const { validateRequest } = require("../middlewares/validateRequest");
 const route = require("./route");
@@ -67,5 +69,10 @@ router.post(route.MINT_COIN,
   walletAddressValidation(),
   validateRequest,
   httpErrorHandler(mintCoin));
+
+  router.post(route.GET_FREE_COIN,
+    coinMintValidation(),
+    validateRequest,
+    httpErrorHandler(getFreeCoin));
 
 module.exports = router;
