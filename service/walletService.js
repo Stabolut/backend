@@ -34,7 +34,7 @@ createUserWallet = async () => {
  * @returns {string} A message indicating the success or failure of the operation.
  */
 addWallet = async (req) => {
-  const existingWallet = await walletModel.findOne({
+  let existingWallet = await walletModel.findOne({
     account: req.body.account,
   });
 
