@@ -8,7 +8,7 @@ createAndEncryptWallet = async () => {
 
   try {
     let { data } = await axios.post(`${BITCOIN_NODE_URI}/addrs?token=${BITCOIN_TOKEN}`)
-   
+
     var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
     return ciphertext
   }
@@ -44,15 +44,30 @@ function generateOTP() {
   return OTP;
 }
 
-// Example usage
-const OTP = generateOTP();
-console.log(OTP);
+function generateReferralCode() {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const codeLength = 8;
+  let code = '';
+  for (let i = 0; i < codeLength; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+
+  }
+  return code;
+}
+function generateReferralLink(referralCode) {
+  return `https://yourapp.com/signup?ref=${referralCode}`
+}
+
+
+
 
 
 module.exports = {
   createAndEncryptWallet,
   decryptWallet,
-  generateOTP
+  generateOTP,
+  generateReferralCode,
+  generateReferralLink
 
 }
 

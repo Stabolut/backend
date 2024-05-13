@@ -26,6 +26,13 @@ const walletSchema = new Schema({
     default: 0
 
   },
+  referralCode: {
+    type: String,
+  },
+  referralLink: {
+    type: String,
+
+  },
   // Field to store timestamps for document creation and updation
   timestamps: {
     created_At: { type: Date, default: Date.now },

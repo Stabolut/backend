@@ -3,6 +3,7 @@ const { errorMessages } = require("../constants/errors");
 const walletModel = require("../models/walletModel");
 const { getTokenBalance } = require("../utils/wallet");
 const transactionModel = require("../models/transactionModel");
+const { isEmpty } = require("lodash")
 const { sendNotificationService } = require("../workers/sendNotificationService")
 const {
   isValidEthereumAddress,
@@ -16,6 +17,7 @@ const _ = require("lodash");
 const { createWallet, signAndSendTransactionOnPurchase } = require("../utils/wallet");
 const apiError = require("../error/apiError");
 const constant = require("../constants/constant");
+const { generateReferralCode, generateReferralLink } = require("../utils/helperMethod");
 
 /**
  * Creates a new wallet for a user.
@@ -39,26 +41,40 @@ addWallet = async (req) => {
 
 
   if (existingWallet) {
+    if (isEmpty(existingWallet.referralCode)) {
+      console.log("referall not exist")
+      let referralCode = generateReferralCode()
+      let referralLink = generateReferralLink(referralCode)
+      console.log("referralCode", referralCode, "referralLink", referralLink)
 
+      await walletModel.updateOne({ _id: existingWallet._id }, {
+        $set: { referralCode: referralCode, referralLink: referralLink }
+      });
+
+    }
+    console.log("referall already exist")
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
-
-
-      return "Token already exists in the TokenArray";
+      return { data: existingWallet, message: "Token already exists in the TokenArray" }
     } else {
 
       existingWallet.tokenArray.push({ token: req.body.token });
       existingWallet.save();
-      return "Token does not exist in the tokenArray, so add it.";
+      return { data: existingWallet, message: "Token does not exist in the tokenArray, so add it." }
     }
   } else {
 
+    let referralCode = generateReferralCode()
+    let referralLink = generateReferralLink(referralCode)
+    console.log("referralCode", referralCode, "referralLink", referralLink)
 
     const newWallet = new walletModel({
       account: req.body.account,
       tokenArray: [{ token: req.body.token }],
+      referralCode: referralCode,
+      referralLink: referralLink
     });
     newWallet.save();
-    return "Wallet document with the given account does not exist, so create it.";
+    return { data: newWallet, message: "Wallet document with the given account does not exist, so create it." }
   }
 };
 
@@ -280,14 +296,13 @@ getFreeCoin = async (req) => {
 
   const { walletAddress, amount } = req.body;
 
-  console.log("amount", typeof amount)
+
 
   if (!isValidEthereumAddress(walletAddress))
     throw new apiError(
       errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Wallet"),
       400
     );
-
 
   const existingWallet = await walletModel.findOne({
     account: walletAddress,
