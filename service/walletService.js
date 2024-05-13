@@ -42,17 +42,16 @@ addWallet = async (req) => {
 
   if (existingWallet) {
     if (isEmpty(existingWallet.referralCode)) {
-      console.log("referall not exist")
+
       let referralCode = generateReferralCode()
       let referralLink = generateReferralLink(referralCode)
-      console.log("referralCode", referralCode, "referralLink", referralLink)
+      existingWallet.referralCode = referralCode
+      existingWallet.referralLink = referralLink
+      existingWallet = await existingWallet.save()
 
-      existingWallet = await walletModel.updateOne({ _id: existingWallet._id }, {
-        $set: { referralCode: referralCode, referralLink: referralLink }
-      });
 
     }
-    console.log("referall already exist",existingWallet)
+
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
       return { data: existingWallet, message: "Token already exists in the TokenArray" }
     } else {
@@ -65,7 +64,6 @@ addWallet = async (req) => {
 
     let referralCode = generateReferralCode()
     let referralLink = generateReferralLink(referralCode)
-    console.log("referralCode", referralCode, "referralLink", referralLink)
 
     const newWallet = new walletModel({
       account: req.body.account,
