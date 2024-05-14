@@ -3,6 +3,7 @@ const { errorMessages } = require("../constants/errors");
 const walletModel = require("../models/walletModel");
 const { getTokenBalance } = require("../utils/wallet");
 const transactionModel = require("../models/transactionModel");
+const referralModel = require("../models/referralModel")
 const { isEmpty } = require("lodash")
 const { sendNotificationService } = require("../workers/sendNotificationService")
 const {
@@ -34,13 +35,46 @@ createUserWallet = async () => {
  * @returns {string} A message indicating the success or failure of the operation.
  */
 addWallet = async (req) => {
+
   let existingWallet = await walletModel.findOne({
     account: req.body.account,
   });
+  if (!isEmpty(req.body.referenceCode)) {
+
+
+    let referralUser = await walletModel.findOne({
+      referralCode: req.body.referenceCode,
+    });
+    if (!referralUser) throw new apiError(
+      "Oops! It seems like the referral code you entered is incorrect. Please double-check and try again. If you don't have a referral code, you can continue without it.",
+      400
+    );
+    let referralExist = await referralModel.findOne({
+      referenceWallet: referralUser.account,
+      refferalWallet: req.body.account,
+    });
+    if (referralExist)
+
+      throw new apiError(
+        " It looks like you've already made a referral. If you have another code to enter, please note that you can only make one referral per account. If you need assistance, feel free to reach out",
+        400
+      );
+
+
+    const referral = new referralModel({
+      referenceWallet: referralUser.account,
+      refferalWallet: req.body.account,
+
+    });
+    referral.save();
+  }
+
 
 
 
   if (existingWallet) {
+
+
     if (isEmpty(existingWallet.referralCode)) {
 
       let referralCode = generateReferralCode()
