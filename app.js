@@ -20,11 +20,11 @@ const connectToMongo = require("./connection/db");
 const newWeb3Connection = require("./connection/blockchain");
 const { ethToUsbTokenExchangeService } = require("./workers/ethToUsbTokenExchangeService")
 const { btcToUsbTokenExchangeService } = require("./workers/btcToUsbTokenExchangeService")
-// const { automatedWalletStakingService } = require("./workers/automatedWalletStakingService")
+const { automatedWalletStakingService } = require("./workers/automatedWalletStakingService")
 const { stakingRewardService } = require("./workers/stakingRewardService")
 const { transactionListener } = require("./workers/transactionListener")
 const { sendReferralTokenService } = require("./workers/sendReferralTokenService")
-const { automatedWalletStakingService }  = require("./workers/AutomatedWalletStakingService")
+
 const { MONGO_URL, RPC_URI } = require("./config");
 const router = require("./routes/index");
 const socketIO = require("./workers/socketService");
