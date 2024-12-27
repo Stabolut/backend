@@ -18,17 +18,26 @@ const morgan = require("morgan");
 var mongoose = require("mongoose");
 const connectToMongo = require("./connection/db");
 const newWeb3Connection = require("./connection/blockchain");
-const { ethToUsbTokenExchangeService } = require("./workers/ethToUsbTokenExchangeService")
-const { btcToUsbTokenExchangeService } = require("./workers/btcToUsbTokenExchangeService")
-const { automatedWalletStakingService } = require("./workers/automatedWalletStakingService")
-const { stakingRewardService } = require("./workers/stakingRewardService")
-const { transactionListener } = require("./workers/transactionListener")
-const { sendReferralTokenService } = require("./workers/sendReferralTokenService")
+const {
+  ethToUsbTokenExchangeService,
+} = require("./workers/ethToUsbTokenExchangeService");
+const {
+  btcToUsbTokenExchangeService,
+} = require("./workers/btcToUsbTokenExchangeService");
+const {
+  automatedWalletStakingService,
+} = require("./workers/automatedWalletStakingService");
+const { stakingRewardService } = require("./workers/stakingRewardService");
+const { transactionListener } = require("./workers/transactionListener");
+const {
+  sendReferralTokenService,
+} = require("./workers/sendReferralTokenService");
 
 const { MONGO_URL, RPC_URI } = require("./config");
 const router = require("./routes/index");
 const socketIO = require("./workers/socketService");
 const { constant } = require("./constants/constant");
+const { swaggerUi, swaggerDocs } = require("./docs/swagger");
 
 const app = express();
 mongoose.Promise = global.Promise;
@@ -79,6 +88,9 @@ app.use(
 // Enable CORS
 app.use(cors());
 
+// Swagger documentation route
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 // Parse request bodies as JSON
 app.use(bodyParser.json());
 
@@ -88,9 +100,8 @@ connectToMongo();
 // Connect to Web3 blockchain
 newWeb3Connection();
 app.get(constant.api.prefix, (req, res) => {
-  res.send("Node version 5 is running")
-
-})
+  res.send("Node version 5 is running");
+});
 
 // Define API routes
 app.use(constant.api.prefix, router);
@@ -107,9 +118,9 @@ socketIO(httpServer);
 transactionListener();
 automatedWalletStakingService();
 stakingRewardService();
-ethToUsbTokenExchangeService()
-btcToUsbTokenExchangeService()
-sendReferralTokenService()
+ethToUsbTokenExchangeService();
+btcToUsbTokenExchangeService();
+sendReferralTokenService();
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {
