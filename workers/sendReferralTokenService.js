@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const purchasenModel = require("../models/purchaseModel");
-const { ABI, CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, RPC_URI, BITPAY_URL } = require("../config");
-const { signAndSendTransaction, getGasPrice } = require("../utils/wallet");
+const { ABI, CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, RPC_URI, BITPAY_URL, TOKEN_DECIMAL } = require("../config");
+const { signAndSendTransaction, getGasPrice, getNonce } = require("../utils/wallet");
 const Web3 = require("web3");
 const axios = require("axios");
 const constant = require("../constants/constant"); // Importing constants
@@ -20,11 +20,24 @@ const sendReferralTokenService = async () => {
                 for (const document of documents) {
 
                     let gasPrice = (await getGasPrice()) * 2;
-                    const gasLimit = 21000000;
-                    const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
+
+                    const nonce = await getNonce(FUNDING_ADDRESS);
                     const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
-                    const tx1 = contract.methods.mint(document.referenceWallet, parseInt(constant.constant.referralRewardAmount * 1e2));
+                    let amountToMint = parseFloat(constant.constant.referralRewardAmount) * TOKEN_DECIMAL;
+                    const tx1 = contract.methods.mint(document.referenceWallet, amountToMint);
                     const encodedTx = tx1.encodeABI();
+
+                    // Construct transaction object
+                    let estimateTransactionObject = {
+                        nonce: global.web3.utils.toHex(nonce),
+                        from: FUNDING_ADDRESS,
+                        gasPrice: global.web3.utils.toHex(gasPrice),
+                        to: CONTRACT_ADDRESS,
+                        data: encodedTx,
+                    };
+
+                    const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
+
                     const transactionObject = {
                         nonce: web3Usb.utils.toHex(nonce),
                         from: FUNDING_ADDRESS,
@@ -39,7 +52,6 @@ const sendReferralTokenService = async () => {
                         $set: {
                             isRewardTransfer: true,
                             transactionHash: hash.transactionHash
-
                         }
                     });
 

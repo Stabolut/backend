@@ -34,7 +34,9 @@ const sendNotificationService = (userToken, body, title, subtitle = "", metaData
                     color: "#788595",
                     priority: "high",
                     sound: "default",
+                    icon: "ic_notification", 
                     vibrateTimingsMillis: [200, 500, 800],
+                    
                 },
             },
             apns: {

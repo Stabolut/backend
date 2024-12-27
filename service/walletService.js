@@ -13,7 +13,7 @@ const {
   signAndSendTransaction,
   transferPreSignedHex,
 } = require("../utils/wallet");
-const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ABI } = require("../config");
+const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ABI, TOKEN_DECIMAL } = require("../config");
 const _ = require("lodash");
 const { createWallet, signAndSendTransactionOnPurchase } = require("../utils/wallet");
 const apiError = require("../error/apiError");
@@ -39,24 +39,25 @@ addWallet = async (req) => {
   let existingWallet = await walletModel.findOne({
     account: req.body.account,
   });
+
   if (!isEmpty(req.body.referenceCode)) {
-
-
+   
     let referralUser = await walletModel.findOne({
-      referralCode: req.body.referenceCode,
+      referralCode: { $regex: new RegExp(`^${req.body.referenceCode}$`, 'i') },
     });
+
     if (!referralUser) throw new apiError(
       "Oops! It seems like the referral code you entered is incorrect. Please double-check and try again. If you don't have a referral code, you can continue without it.",
       400
     );
     let referralExist = await referralModel.findOne({
-      referenceWallet: referralUser.account,
-      refferalWallet: req.body.account,
+      referenceWallet: { $regex: new RegExp(`^${referralUser.account}$`, 'i') },
+      refferalWallet: { $regex: new RegExp(`^${req.body.account}$`, 'i') },
     });
     if (referralExist)
 
       throw new apiError(
-        " It looks like you've already made a referral. If you have another code to enter, please note that you can only make one referral per account. If you need assistance, feel free to reach out",
+        "It looks like you've already made a referral. If you have another code to enter, please note that you can only make one referral per account. If you need assistance, feel free to reach out",
         400
       );
 
@@ -69,9 +70,6 @@ addWallet = async (req) => {
     referral.save();
   }
 
-
-
-
   if (existingWallet) {
 
 
@@ -82,11 +80,10 @@ addWallet = async (req) => {
       existingWallet.referralCode = referralCode
       existingWallet.referralLink = referralLink
       existingWallet = await existingWallet.save()
-
-
     }
 
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
+
       return { data: existingWallet, message: "Token already exists in the TokenArray" }
     } else {
 
@@ -184,18 +181,27 @@ transferTokens = async (req) => {
 
   // Save transaction details
   let findTransaction = await transactionModel.findOne({
-    senderAddress: body.senderAddress,
-    receiverAddress: body.toAddress,
-    amountToSend: body.amount / 1e2,
+    senderAddress: { $regex: new RegExp(`^${body.senderAddress}$`, 'i') },
+    receiverAddress: { $regex: new RegExp(`^${body.toAddress}$`, 'i') },
+    amountToSend: body.amount / TOKEN_DECIMAL,
     transactionHash: hash.transactionHash,
   });
 
+  if (findTransaction) {
 
-  if (!findTransaction) {
+    // Update the transaction if it already exists and `transactionNotes` is provided
+    if (body.transNotes && !findTransaction.transactionNotes) {
+
+      findTransaction.transactionNotes = body.transNotes;
+      await findTransaction.save();
+    }
+  } else {
+
+    // Create a new transaction if it doesn't exist
     let transaction = {
       senderAddress: body.senderAddress,
       receiverAddress: body.toAddress,
-      amountToSend: body.amount / 1e2,
+      amountToSend: body.amount / TOKEN_DECIMAL,
       transactionHash: hash.transactionHash,
       sendDate: new Date(),
       transactionNotes: body.transNotes,

@@ -42,7 +42,6 @@ const assignUsernameToWallet = async (req, res) => {
 
   const usernameExist = await userModel.findOne({ username: req.body.username.toLowerCase() });
   if (usernameExist) throw new apiError(errorMessages.AUTH.USERNAME_ALREADY_EXIST(req.body.username))
-
   const accountExist = await userModel.findOne({ account: req.body.accountID });
 
   if (accountExist) {
@@ -82,9 +81,10 @@ const addContactList = async (req, res) => {
 
   // // Check if the contact already exists
   const accountExist = await contactListModel.findOne({
-    receiver_account: req.body.receiverAccount,
-    sender_account: req.body.senderAccount,
+    receiver_account: { $regex: new RegExp(`^${req.body.receiverAccount}$`, 'i') },
+    sender_account:{ $regex: new RegExp(`^${req.body.senderAccount}$`, 'i') },
   });
+
 
   if (accountExist) {
     throw new apiError(
@@ -95,7 +95,7 @@ const addContactList = async (req, res) => {
 
   // Check if the contact already exists
   const nameExist = await contactListModel.findOne({
-    sender_account: req.body.senderAccount,
+    sender_account: { $regex: new RegExp(`^${req.body.senderAccount}$`, 'i') },
     name: req.body.name.toLowerCase(),
   });
 

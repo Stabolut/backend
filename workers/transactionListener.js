@@ -5,8 +5,11 @@ const {
   FUNDING_ADDRESS,
   SOCKET_URI,
   ABI,
+  TOKEN_DECIMAL,
 } = require("../config");
 const transactionModel = require("../models/transactionModel");
+const constant = require("../constants/constant");
+
 
 /**
  * Function to listen for contract events and save transactions
@@ -21,12 +24,12 @@ const transactionListener = () => {
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
+
       // Handling errors
       if (error) {
         console.error(error);
         return;
       }
-    
 
       // Initializing transaction type
       let transactionTransferType = "Transfer";
@@ -34,21 +37,23 @@ const transactionListener = () => {
 
       // Finding existing transaction in the database
       let findTransaction = await transactionModel.findOne({
-        senderAddress: event?.returnValues?.from,
-        receiverAddress: event?.returnValues?.to,
-        amountToSend: parseFloat(event?.returnValues?.value) / 1e2,
+        senderAddress: { $regex: new RegExp(`^${event?.returnValues?.from}$`, 'i') },
+        receiverAddress: { $regex: new RegExp(`^${event?.returnValues?.to}$`, 'i') },
+        amountToSend: parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL,
         transactionHash: event.transactionHash,
       });
+      
 
       // Creating transaction object if not found in database
       if (!findTransaction) {
         // Checking if transaction is a fee transaction
         if (event?.returnValues?.to === FUNDING_ADDRESS) {
+        
           transactionTransferType = "Fee";
           transaction = {
             senderAddress: event?.returnValues?.from,
             receiverAddress: event?.returnValues?.to,
-            amountToSend: parseFloat(event?.returnValues?.value) / 1e2,
+            amountToSend: parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL,
             transactionHash: event.transactionHash,
             transactionType: transactionTransferType,
             transactionStatus: "Success",
@@ -56,6 +61,8 @@ const transactionListener = () => {
           };
         } else {
           // Otherwise, it's a regular transaction
+         
+
           transaction = {
             senderAddress: event?.returnValues?.from,
             receiverAddress: event?.returnValues?.to,
@@ -71,6 +78,7 @@ const transactionListener = () => {
         await newTransaction.save();
         console.log("Transaction saved in script");
       }
+     
     });
   } catch (e) {
     console.log("Run script failed", e);

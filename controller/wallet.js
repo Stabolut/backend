@@ -25,8 +25,6 @@ createWallet = async (req, res) => {
 addWallet = async (req, res) => {
   // Call the addWallet function from the walletService module and await its response
   const data = await wallet.addWallet(req);
-  console.log("data", data)
-
   // Send a success response with the message received from adding a wallet
   return sendSuccessResponse(res, data.message, 200, data.data);
 };
