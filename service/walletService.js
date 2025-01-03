@@ -41,7 +41,7 @@ addWallet = async (req) => {
   });
 
   if (!isEmpty(req.body.referenceCode)) {
-   
+
     let referralUser = await walletModel.findOne({
       referralCode: { $regex: new RegExp(`^${req.body.referenceCode}$`, 'i') },
     });
@@ -302,24 +302,35 @@ updateTransactionStatus = async (req) => {
 
 mintCoin = async (req) => {
 
-  let gasLimit = 21000000;
+  
   let gasPrice = (await getGasPrice()) * 2;
   const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
   const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
 
   let tx1 = await contract.methods.mint(
     req.body.walletAddress,
-    parseInt(req.body.amount * 1e2)
+    parseInt(req.body.amount * TOKEN_DECIMAL)
   );
-  const encoded_tx = tx1.encodeABI();
+  const encodedTx = tx1.encodeABI();
 
-  let transactionObject = {
+  // Construct transaction object
+  let estimateTransactionObject = {
+    nonce: global.web3.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: global.web3.utils.toHex(gasPrice),
+    to: CONTRACT_ADDRESS,
+    data: encodedTx,
+  };
+
+  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
+
+let transactionObject = {
     nonce: web3.utils.toHex(nonce),
     from: FUNDING_ADDRESS,
     gasPrice: web3.utils.toHex(gasPrice),
     gasLimit: web3.utils.toHex(gasLimit),
     to: CONTRACT_ADDRESS,
-    data: encoded_tx,
+    data: encodedTx,
 
   };
   await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
@@ -333,8 +344,6 @@ mintCoin = async (req) => {
 getFreeCoin = async (req) => {
 
   const { walletAddress, amount } = req.body;
-
-
 
   if (!isValidEthereumAddress(walletAddress))
     throw new apiError(
@@ -352,16 +361,28 @@ getFreeCoin = async (req) => {
   if ((amount + existingWallet.freeUSBCoinsBalance) > constant.constant.freeUSBLimit) throw new apiError(errorMessages.ADMIN.REACHED_LIMIT_ERROR(constant.constant.freeUSBLimit, existingWallet.freeUSBCoinsBalance, constant.constant.freeUSBLimit - existingWallet.freeUSBCoinsBalance))
 
 
-  let gasLimit = 21000000;
+
   let gasPrice = (await getGasPrice()) * 2;
-  const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
+
+  const nonce = await getNonce(FUNDING_ADDRESS);
   const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
 
   let tx1 = await contract.methods.mint(
     req.body.walletAddress,
-    parseInt(req.body.amount * 1e2)
+    parseInt(req.body.amount * TOKEN_DECIMAL)
   );
-  const encoded_tx = tx1.encodeABI();
+  const encodedTx = tx1.encodeABI();
+
+  // Construct transaction object
+  let estimateTransactionObject = {
+    nonce: global.web3.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: global.web3.utils.toHex(gasPrice),
+    to: CONTRACT_ADDRESS,
+    data: encodedTx,
+  };
+
+  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
 
   let transactionObject = {
     nonce: web3.utils.toHex(nonce),
@@ -369,9 +390,10 @@ getFreeCoin = async (req) => {
     gasPrice: web3.utils.toHex(gasPrice),
     gasLimit: web3.utils.toHex(gasLimit),
     to: CONTRACT_ADDRESS,
-    data: encoded_tx,
+    data: encodedTx,
 
   };
+
   await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
 
   //store token amount in db

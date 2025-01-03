@@ -88,11 +88,9 @@ const purchaseUSBWithEther = async (req) => {
     usdRate = constant.constant.ethToUsdRate
 
   }
-
   // Get transaction receipt and details
   let resp = await web3Eth.eth.getTransactionReceipt(req.body.hash);
   let tx = await web3Eth.eth.getTransaction(req.body.hash);
-
   // Find admin deposit address for validation
   admin = await depositAdminModel.findOne({
     type: constant.constant.currencyType.eth,
@@ -135,7 +133,7 @@ const purchaseUSBWithEther = async (req) => {
   despositAmount = tx.value;
 
   // Calculate gas price, gas limit, and nonce for transaction
-  let gasLimit = 21000000;
+
   let gasPrice = (await getGasPrice()) * 2;
   const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
 
@@ -146,7 +144,19 @@ const purchaseUSBWithEther = async (req) => {
     req.body.usbAddress,
     parseInt((despositAmount / 1e18) * usdRate * 1e2)
   );
-  const encoded_tx = mintObject.encodeABI();
+  const encodedTx = mintObject.encodeABI();
+
+  // Construct transaction object
+  let estimateTransactionObject = {
+    nonce: web3Usb.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: web3Usb.utils.toHex(gasPrice),
+    to: CONTRACT_ADDRESS,
+    data: encodedTx,
+  };
+
+  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
+
 
   // Build transaction object
   let transactionObject = {
@@ -155,7 +165,7 @@ const purchaseUSBWithEther = async (req) => {
     gasPrice: web3Usb.utils.toHex(gasPrice),
     gasLimit: web3Usb.utils.toHex(gasLimit),
     to: CONTRACT_ADDRESS,
-    data: encoded_tx,
+    data: encodedTx,
 
   };
 
@@ -191,7 +201,7 @@ const purchaseUSBWithEther = async (req) => {
  */
 const purchaseUSBWithBtc = async (req) => {
 
- 
+
   let depositAmount, usdRate, conversionApiResponse, document
   const { usbAddress, amount, hash } = req.body
 
@@ -241,11 +251,11 @@ const purchaseUSBWithBtc = async (req) => {
   try {
 
     response = await axios.get(`${BITPAY_URL}/tx/${hash}`);
-   
+
 
   }
   catch (e) {
-   
+
 
     await purchasenModel.updateOne({ _id: document._id }, {
       $set: {
@@ -315,8 +325,6 @@ const checkUserWalletExistence = async (req) => {
   if (wallet) isWalletExist = true
   return isWalletExist
 }
-
-
 
 
 
