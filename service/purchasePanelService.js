@@ -3,6 +3,7 @@ const apiError = require("../error/apiError");
 const depositAdminModel = require("../models/depositAdminAddressesModel");
 const purchasenModel = require("../models/purchaseModel");
 const walletModel = require("../models/walletModel")
+const AdminModel = require("../models/AdminModel");
 const { errorMessages } = require("../constants/errors");
 
 const {
@@ -15,6 +16,8 @@ const {
   FUNDING_ADDRESS,
   FUNDING_KEY,
   BITPAY_URL,
+  JWT_SECRET_KEY,
+  SESSION_EXPIRES_IN,
 } = require("../config");
 
 const _ = require("lodash");
@@ -29,6 +32,9 @@ const Web3 = require("web3");
 const constant = require("../constants/constant");
 const { infoMessages } = require("../constants/messages");
 const { response } = require("express");
+const CryptoJS = require("crypto-js")
+const jwt = require("jsonwebtoken")
+
 const web3Eth = new Web3(ETH_RPC_URL);
 const web3Usb = new Web3(RPC_URI);
 
@@ -326,6 +332,46 @@ const checkUserWalletExistence = async (req) => {
   return isWalletExist
 }
 
+const loggedInAdminUser = async (req) => {
+
+  var hash = CryptoJS.SHA256(req.body.password).toString(CryptoJS.enc.Hex);
+
+  const account = await AdminModel.findOne({
+    email: req.body.email,
+    password: hash
+  });
+  if (!account)
+    throw new apiError(errorMessages.AUTH.USER_NOT_FOUND, 400);
+
+  const jwtToken = jwt.sign(
+    { email: req.body.email, id: account._id, role: "ADMIN" },
+    JWT_SECRET_KEY,
+    { expiresIn: SESSION_EXPIRES_IN },
+  );
+  return { token: jwtToken }
+
+}
+const updatePassword = async (req) => {
+  let user = await AdminModel.findOne({ email: req.body.email }).select(
+    "password",
+  );
+  if (!user)
+    throw new apiError(errorMessages.AUTH.USER_NOT_FOUND, 400);
+
+  await AdminModel.updateOne(
+    { email: { $regex: `^${req.body.email}$`, $options: 'i' } }, // Case-insensitive regex
+    {
+      $set: {
+        password: CryptoJS.SHA256(req.body.password).toString(
+          CryptoJS.enc.Hex
+        ),
+      },
+    }
+  );
+
+  return
+}
+
 
 
 // Export the controller functions
@@ -333,5 +379,7 @@ module.exports = {
   getDepositAddress,
   purchaseUSBWithEther,
   purchaseUSBWithBtc,
-  checkUserWalletExistence
+  checkUserWalletExistence,
+  loggedInAdminUser,
+  updatePassword
 };

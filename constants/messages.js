@@ -32,6 +32,7 @@ const infoMessages = {
       `There is no record found against this : ${record}.`,
     RECORD_FOUND: (record) => `Record found against this : ${record}.`,
   },
+  WITHDRAW_SUCCESSFULLY: `Token withdraw successfully.`,
   WALLET: {
     TOKEN_TRANSFER_SUCCESSFULLY: `Token transfer successfully.`,
   },
@@ -42,14 +43,14 @@ const infoMessages = {
     PURCHASE_CONFIRMATION_MESSAGE: (amount, usbAddress, hash) =>
       `Your purchase request of ${amount} USB coins has been received successfully. The USB coins will be sent to the wallet address you provided: ${usbAddress
       } once your transaction is confirmed on the blockchain. Please monitor the transaction status continuously on the explorer. Once confirmed, we will send you the token. This is your transaction hash: ${hash} kindly check it on the explorer.`,
- 
-      TRANSFER_USB_CONFIRMATION_ON_PURCHASE: (amount, usbAddress) => `Your purchase of ${amount} USB coins has been completed successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress}.`,
-      TRANSFER_USB_PENDING_ON_PURCHASE: (amount, usbAddress) => `Your purchase request of ${amount} USB coins has been received successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress} shorlty.`
-     
+
+    TRANSFER_USB_CONFIRMATION_ON_PURCHASE: (amount, usbAddress) => `Your purchase of ${amount} USB coins has been completed successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress}.`,
+    TRANSFER_USB_PENDING_ON_PURCHASE: (amount, usbAddress) => `Your purchase request of ${amount} USB coins has been received successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress} shorlty.`
 
 
 
-    }
+
+  }
 };
 module.exports = {
   infoMessages: infoMessages,

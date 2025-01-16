@@ -123,6 +123,21 @@ getFreeCoin = async (req, res) => {
   );
 };
 
+withdrawToken
+
+// Function to get user by wallet
+withdrawToken = async (req, res) => {
+  console.log("i am hit thereee",req.body)
+  // Call the getUserByWallet function from the walletService module and await its response
+  await wallet.withdrawToken(req);
+
+  // Send a success response with the message indicating successful retrieval of user by wallet
+  return sendSuccessResponse(
+    res,
+    infoMessages.GENERIC.WITHDRAW_SUCCESSFULLY,
+    200
+  );
+};
 
 // Exporting the functions so they can be used elsewhere
 module.exports = {
@@ -134,5 +149,6 @@ module.exports = {
   updateTransactionStatus,
   getUserByWallet,
   mintCoin,
-  getFreeCoin
+  getFreeCoin,
+  withdrawToken
 };

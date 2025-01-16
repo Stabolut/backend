@@ -27,7 +27,8 @@ const SUBJECT = "Support Email";
 const EMAL_SENDER = "cto@stabolut.com";
 const RECEIPENT = "cto@stabolut.com";
 const ETH_RPC_URL = process.env.ETH_RPC_URL;
-const TOKEN_DECIMAL=1e2
+const TOKEN_DECIMAL = 1e2
+const STAKE_REWRD_PERCENT = 2.5
 
 
 const emailForAdminContact = (name, email, message, phone) => {
@@ -498,5 +499,7 @@ module.exports = {
   BLOCKCHAIN_CHAIN_ID,
   ETH_TO_USD_URL,
   ETH_RPC_URL,
-  TOKEN_DECIMAL
+  TOKEN_DECIMAL,
+  STAKE_REWRD_PERCENT
+
 };

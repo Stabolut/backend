@@ -19,6 +19,7 @@ const { createWallet, signAndSendTransactionOnPurchase } = require("../utils/wal
 const apiError = require("../error/apiError");
 const constant = require("../constants/constant");
 const { generateReferralCode, generateReferralLink } = require("../utils/helperMethod");
+const stakeModel = require("../models/stakeModel");
 
 /**
  * Creates a new wallet for a user.
@@ -302,7 +303,7 @@ updateTransactionStatus = async (req) => {
 
 mintCoin = async (req) => {
 
-  
+
   let gasPrice = (await getGasPrice()) * 2;
   const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
   const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
@@ -324,7 +325,7 @@ mintCoin = async (req) => {
 
   const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
 
-let transactionObject = {
+  let transactionObject = {
     nonce: web3.utils.toHex(nonce),
     from: FUNDING_ADDRESS,
     gasPrice: web3.utils.toHex(gasPrice),
@@ -404,7 +405,48 @@ getFreeCoin = async (req) => {
 
 
 }
+withdrawToken = async (req) => {
 
+  let gasPrice = (await getGasPrice()) * 2;
+  const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
+  const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+  let tx1 = await contract.methods.mint(
+    req.body.walletAddress,
+    parseInt(req.body.amount * TOKEN_DECIMAL)
+  );
+  const encodedTx = tx1.encodeABI();
+
+  // Construct transaction object
+  let estimateTransactionObject = {
+    nonce: global.web3.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: global.web3.utils.toHex(gasPrice),
+    to: CONTRACT_ADDRESS,
+    data: encodedTx,
+  };
+
+  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
+
+  let transactionObject = {
+    nonce: web3.utils.toHex(nonce),
+    from: FUNDING_ADDRESS,
+    gasPrice: web3.utils.toHex(gasPrice),
+    gasLimit: web3.utils.toHex(gasLimit),
+    to: CONTRACT_ADDRESS,
+    data: encodedTx,
+
+  };
+  await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
+
+
+  await stakeModel.updateMany(
+    { wallet: req.body.walletAddress },
+    { $set: { rewardAmountOnStaking: 0 } } // Resets balance to zero for all records with the wallet
+  );
+  return 'Coin withdraw successfully'
+
+}
 
 
 
@@ -417,5 +459,6 @@ module.exports = {
   transactionsListWithLimit,
   updateTransactionStatus,
   mintCoin,
-  getFreeCoin
+  getFreeCoin,
+  withdrawToken
 };

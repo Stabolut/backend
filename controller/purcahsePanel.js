@@ -36,10 +36,23 @@ purchaseUSBWithBtc = async (req, res) => {
 
 // Function to check user wallet existance
 checkUserWalletExistence = async (req, res) => {
- 
+
   let isExist = await purchase.checkUserWalletExistence(req);
   return sendSuccessResponse(res, infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("User wallet info"), 200, isExist);
 };
+loggedInAdminUser = async (req, res) => {
+  let data = await purchase.loggedInAdminUser(req);
+  return sendSuccessResponse(res, infoMessages.AUTH.LOGIN_MESSAGE, 200, data);
+
+}
+updatePassword = async (req, res) => {
+  await purchase.updatePassword(req);
+  return sendSuccessResponse(res, infoMessages.GENERIC.ITEM_ADD_SUCCESSFULLY("password"), 200);
+
+}
+
+
+
 
 
 // Exporting the functions so they can be used elsewhere
@@ -47,5 +60,7 @@ module.exports = {
   getDepositAddress,
   purchaseUSBWithEther,
   purchaseUSBWithBtc,
-  checkUserWalletExistence
+  checkUserWalletExistence,
+  loggedInAdminUser,
+  updatePassword
 };

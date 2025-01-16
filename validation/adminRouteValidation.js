@@ -70,27 +70,84 @@ const purchaseUSBValidation = () => [
 const checkWalletAddressValidation = () => [
 
   body("usbAddress")
-      .exists()
-      .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("usbAddress"))
-      .bail()
-      .not()
-      .isEmpty()
-      .withMessage(
-        errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("usbAddress")
-      )
-      .bail()
-      .isString()
-      .withMessage(errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("usbAddress")),
+    .exists()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("usbAddress"))
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("usbAddress")
+    )
+    .bail()
+    .isString()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("usbAddress")),
 
 
+];
+
+const loginAdminValidation = () => [
+  body("email")
+    .exists()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("email"))
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("email"))
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("email"),
+    ),
+
+  body("password")
+    .exists()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("password"))
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("password"))
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("password"),
+    ),
+
+
+];
+
+
+const updatePasswordValidation = () => [
+  body("password")
+    .exists()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("password"))
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("password"))
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("password"),
+    )
+    .bail()
+    .custom((value) => validatePassword(value))
+    .withMessage(errorMessages.AUTH.INVALID_PASSWORD("Password")),
 ];
 
 const validateAddressType = (type) => {
   return addressType.find((x) => x === type) ? true : false;
 };
+const validatePassword = (password)=> {
+  //const re = /^(?!.*[_\s-]{2,})[a-zA-Z0-9][a-zA-Z0-9_\-]*[a-zA-Z0-9]$/
+  const re = /^(?=.*\d)(?=.*[A-Z]).{9,}$/;
+  return re.test(String(password));
+}
+
 
 module.exports = {
   getDepositAddressValidation,
   purchaseUSBValidation,
-  checkWalletAddressValidation
+  checkWalletAddressValidation,
+  loginAdminValidation,
+  updatePasswordValidation
 };

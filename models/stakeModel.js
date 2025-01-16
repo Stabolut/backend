@@ -11,9 +11,9 @@ const stakeSchema = new Schema({
     required: true,
   },
   // Field to store the yield amount
-  yieldAmount: {
-    type: String,
-    required: true,
+  rewardAmountOnStaking: {
+    type: Number,
+    required: false,
   },
   // Field to store the stake amount
   amount: {
@@ -22,9 +22,15 @@ const stakeSchema = new Schema({
   },
   // Field to store the transaction hash
   hash: {
-    type: Number,
+    type: String,
     required: true,
   },
+  withdraw: {
+    type: Boolean,
+    required: false,
+  },
+
+  lastRewardGiven_At: { type: Date, default: null }, // Last reward time
   // Field to store timestamps for document creation and updation
   timestamps: {
     created_At: { type: Date, default: Date.now },

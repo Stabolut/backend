@@ -1,5 +1,5 @@
 const axios = require("axios")
-const { BITCOIN_TOKEN, SECRET_KEY, BITCOIN_NODE_URI } = require("../config")
+const { BITCOIN_TOKEN, SECRET_KEY, BITCOIN_NODE_URI, STAKE_REWRD_PERCENT } = require("../config")
 var CryptoJS = require("crypto-js");
 console.log("uri", `${BITCOIN_NODE_URI}?token=${BITCOIN_TOKEN}`)
 
@@ -57,6 +57,10 @@ function generateReferralCode() {
 function generateReferralLink(referralCode) {
   return `https://yourapp.com/signup?ref=${referralCode}`
 }
+stakeRewardCalculation = (amount) => {
+  console.log("amount ccccc",amount,STAKE_REWRD_PERCENT,(amount * STAKE_REWRD_PERCENT) / 100)
+  return (amount * STAKE_REWRD_PERCENT) / 100; // Calculate yield
+}
 
 
 
@@ -67,7 +71,8 @@ module.exports = {
   decryptWallet,
   generateOTP,
   generateReferralCode,
-  generateReferralLink
+  generateReferralLink,
+  stakeRewardCalculation
 
 }
 

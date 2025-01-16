@@ -5,12 +5,16 @@ const {
   purchaseUSBWithEther,
   purchaseUSBWithBtc,
   checkUserWalletExistence,
+  loggedInAdminUser,
+  updatePassword
 } = require("../controller/purcahsePanel");
 
 const {
   getDepositAddressValidation,
   purchaseUSBValidation,
   checkWalletAddressValidation,
+  loginAdminValidation,
+  updatePasswordValidation
 } = require("../validation/adminRouteValidation");
 
 const { validateRequest } = require("../middlewares/validateRequest");
@@ -148,4 +152,17 @@ router.post(
   httpErrorHandler(checkUserWalletExistence)
 );
 
+router.post(
+  route.ADMIN_LOGIN,
+  loginAdminValidation(),
+  validateRequest,
+  httpErrorHandler(loggedInAdminUser)
+);
+
+router.post(
+  route.UPDATE_PASSWORD,
+  updatePasswordValidation(),
+  validateRequest,
+  httpErrorHandler(updatePassword)
+);
 module.exports = router;

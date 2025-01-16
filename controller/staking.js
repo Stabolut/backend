@@ -24,13 +24,14 @@ getInStake = async (req, res) => {
   
   // Call the getStakeList function from the stakingService module and await its response
   let stakeList = await stakingService.getStakeList(req);
+  console.log("stakeList",stakeList,"final",stakeList.stakeList,"percent",stakeList.stakePercent)
 
   // Send a success response with the list of stake details received from the getStakeList function
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake"),
     200,
-    stakeList
+    {stake:stakeList.stakeList,stakePercent:stakeList.stakePercent}
   );
 };
 

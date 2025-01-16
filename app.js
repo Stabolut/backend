@@ -38,6 +38,7 @@ const router = require("./routes/index");
 const socketIO = require("./workers/socketService");
 const { constant } = require("./constants/constant");
 const { swaggerUi, swaggerDocs } = require("./docs/swagger");
+const { StakingRewardCalculationService } = require("./workers/StakingRewardCalculationService");
 
 const app = express();
 mongoose.Promise = global.Promise;
@@ -116,11 +117,12 @@ socketIO(httpServer);
 
 // Run scripts for various services
 transactionListener();
-automatedWalletStakingService();
-stakingRewardService();
+// automatedWalletStakingService();
+// stakingRewardService();
 ethToUsbTokenExchangeService();
 btcToUsbTokenExchangeService();
 sendReferralTokenService();
+//StakingRewardCalculationService()
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {

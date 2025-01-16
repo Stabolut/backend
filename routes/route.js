@@ -27,4 +27,7 @@ module.exports = {
   // general Route
   CONTACT_US_EMAL: "/contact-us-email",
   SUBSCRIBE: "/subscribe",
+  WITHDRAW_TOKEN:"/withdrawToken",
+  ADMIN_LOGIN:"/login",
+  UPDATE_PASSWORD:"/update-password"
 };

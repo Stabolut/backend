@@ -8,7 +8,7 @@ const {
   transferPreSignedHex,
 } = require("../utils/wallet");
 const stakeModel = require("../models/stakeModel");
-const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
+const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, STAKE_REWRD_PERCENT } = require("../config");
 
 /**
  * Adds a new stake entry with specified details.
@@ -18,7 +18,9 @@ const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
 const addInStake = async (req, res) => {
   const { amount, wallet, signature, toAddress, amountToSend, nonce1 } =
     req.body;
-  const yieldAmount = (amount * 2.5) / 100; // Calculate yield
+  console.log("req.body", req.body)
+  const yieldAmount = (amount * STAKE_REWRD_PERCENT) / 100; // Calculate yield
+  console.log("req.body", yieldAmount)
 
   // Calculate gas price
   const gasPrice = (await getGasPrice()) * 1.3;
@@ -56,11 +58,11 @@ const addInStake = async (req, res) => {
 
   // Sign and send the transaction
   const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+  console.log("hash", hash)
 
   // Save stake details
   const staking = new stakeModel({
     amount,
-    yieldAmount,
     wallet,
     hash: hash.transactionHash,
   });
@@ -83,16 +85,21 @@ const getStakeList = async (req, res) => {
       $group: {
         _id: null,
         totalAmountInStake: { $sum: "$amount" },
+        totalRewardOnStake: { $sum: "$rewardAmountOnStaking" },
         stakeBucketsList: { $push: "$$ROOT" },
       },
     },
   ]);
-
+console.log("stakeList",stakeList)
   // If no stake records found, return empty array
   if (stakeList.length === 0) {
-    stakeList = [{ totalAmountInStake: 0, stakeBucketsList: [] }];
+    stakeList = [{ totalAmountInStake: 0, stakeBucketsList: [],stakePercent: STAKE_REWRD_PERCENT }];
   }
-  return stakeList;
+  
+  return {
+    stakeList: stakeList,
+    stakePercent: STAKE_REWRD_PERCENT
+  };
 };
 
 /**

@@ -9,6 +9,7 @@ const {
   mintCoin,
   transactionsList,
   getFreeCoin,
+  withdrawToken
 } = require("../controller/wallet");
 
 const {
@@ -134,6 +135,13 @@ router.post(
   validateRequest,
   httpErrorHandler(transferTokens)
 );
+router.post(
+  route.WITHDRAW_TOKEN,
+  // transferTokenValidation(),
+  // validateRequest,
+  httpErrorHandler(withdrawToken)
+);
+
 
 /**
  * @swagger
