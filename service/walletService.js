@@ -115,7 +115,10 @@ addWallet = async (req) => {
  */
 transferTokens = async (req) => {
 
+  let r = await getTokenBalance("0x6983cB83052588AF94Cf9a937e664698e4E63490")
+  console.log("balance", r,address)
 
+  return
   const body = _.pick(req.body, [
     "signature",
     "toAddress",
@@ -124,6 +127,7 @@ transferTokens = async (req) => {
     "senderAddress",
     "originalAmount",
     "transNotes",
+    "netowrk"
   ]);
 
   if (!isValidEthereumAddress(body.toAddress))
@@ -172,7 +176,7 @@ transferTokens = async (req) => {
       if (receiveTokenArray[i].token)
         sendNotificationService(
           receiveTokenArray[i].token,
-          `You received ${body.originalAmount} USB from ${body.senderAddress}`,
+          `You received ${body.originalAmount} USB from ${body?.senderAddress}`,
           "Received USB",
           "",
           { address: body.toAddress }
@@ -206,6 +210,7 @@ transferTokens = async (req) => {
       transactionHash: hash.transactionHash,
       sendDate: new Date(),
       transactionNotes: body.transNotes,
+      network: network
     };
 
     const newTransaction = new transactionModel(transaction);

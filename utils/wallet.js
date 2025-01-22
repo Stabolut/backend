@@ -1,5 +1,5 @@
 
-const { CONTRACT_ADDRESS, ABI, FEE } = require('../config')
+const { CONTRACT_ADDRESS, ABI, FEE, NETWORKS } = require('../config')
 
 const privateKeyToAddress = require('ethereum-private-key-to-address')
 
@@ -106,9 +106,10 @@ const getSignature = async (account, hash) => {
         }
 }
 
-const getNonce = async (account) => {
+const getNonce = async (account,network) => {
         try {
-                const count = await global.web3.eth.getTransactionCount(account);
+
+                const count = network===NETWORKS[network].name?   await global.web3.eth.getTransactionCount(account): await global.web3.eth.getTransactionCount(account)
                 return count;
 
         } catch (e) {

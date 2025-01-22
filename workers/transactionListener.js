@@ -24,6 +24,7 @@ const transactionListener = () => {
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
+      console.log("event",event)
 
       // Handling errors
       if (error) {

@@ -116,7 +116,7 @@ const httpServer = http.createServer(app);
 socketIO(httpServer);
 
 // Run scripts for various services
-transactionListener();
+// transactionListener();
 // automatedWalletStakingService();
 // stakingRewardService();
 ethToUsbTokenExchangeService();

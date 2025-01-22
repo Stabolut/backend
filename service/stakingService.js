@@ -93,8 +93,9 @@ const getStakeList = async (req, res) => {
 console.log("stakeList",stakeList)
   // If no stake records found, return empty array
   if (stakeList.length === 0) {
-    stakeList = [{ totalAmountInStake: 0, stakeBucketsList: [],stakePercent: STAKE_REWRD_PERCENT }];
+    stakeList = [{ totalAmountInStake: 0, stakeBucketsList: [],stakePercent: STAKE_REWRD_PERCENT,totalRewardOnStake:0 }];
   }
+  console.log("stakeList",stakeList,STAKE_REWRD_PERCENT)
   
   return {
     stakeList: stakeList,

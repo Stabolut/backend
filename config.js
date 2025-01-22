@@ -2,7 +2,8 @@ const dotenv = require("dotenv");
 const environment = process.env.NODE_ENV || "production";
 if (environment !== "k8s") dotenv.config({ path: `${environment}.env` });
 const isDevEnv = environment === "development";
-const RPC_URI = process.env.RPC_URI;
+const RPC_URI = process.env.ARB_RPC_URI;
+const XDC_URI = process.env.XDC_RPC_URI;
 const SOCKET_URI = process.env.SOCKET_URI;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const FEE = process.env.FEE;
@@ -29,6 +30,27 @@ const RECEIPENT = "cto@stabolut.com";
 const ETH_RPC_URL = process.env.ETH_RPC_URL;
 const TOKEN_DECIMAL = 1e2
 const STAKE_REWRD_PERCENT = 2.5
+const NETWORKS = {
+  "apothem": {
+    name: "XIFINIX",
+    RPC_URI: process.env.ARB_RPC_URI,
+    SOCKET_URI: process.env.ARB_SOCKET_URI,
+    CONTRACT_ADDRESS: process.env.ARB_CONTRACT_ADDRESS
+
+
+  },
+  "arbitrumSepolia": {
+    name: "Arbitrium",
+    RPC_URI: process.env.XDC_RPC_URI,
+    SOCKET_URI: process.env.XDC_SOCKET_URI,
+    CONTRACT_ADDRESS: process.env.XDC_CONTRACT_ADDRESS
+
+  },
+};
+
+
+
+
 
 
 const emailForAdminContact = (name, email, message, phone) => {
@@ -500,6 +522,8 @@ module.exports = {
   ETH_TO_USD_URL,
   ETH_RPC_URL,
   TOKEN_DECIMAL,
-  STAKE_REWRD_PERCENT
+  STAKE_REWRD_PERCENT,
+  NETWORKS,
+  XDC_URI
 
 };

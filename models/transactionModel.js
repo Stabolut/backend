@@ -42,6 +42,11 @@ const transactionSchema = new Schema({
   },
   // Field to store the date of transaction
   sendDate: { type: Date, default: Date.now },
+
+  network: {
+    type: String,
+
+  },
   // Field to store timestamps for document creation and updation
   timestamps: {
     created_At: { type: Date, default: Date.now },

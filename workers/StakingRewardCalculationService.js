@@ -13,9 +13,8 @@ const stakeModel = require("../models/stakeModel");
 const { stakeRewardCalculation } = require("../utils/helperMethod");
 
 const runTask = async () => {
-    console.log("Staking service run after 1 minutes")
-
-    try {
+ 
+try {
         const oneDayAgo = new Date(Date.now() - 3 * 60 * 1000); // 3 minutes ago //new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
         const eligibleTransactions = await stakeModel.find({
             $or: [
@@ -23,7 +22,7 @@ const runTask = async () => {
                 { lastRewardGiven_At: { $lte: oneDayAgo } }, // Subsequent rewards: lastRewardGiven_At is 24+ hours ago
             ],
         });
-        console.log("eligibleTransactions", eligibleTransactions)
+      
         if (eligibleTransactions.length > 0) {
            
          
