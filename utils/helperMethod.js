@@ -57,9 +57,10 @@ function generateReferralCode() {
 function generateReferralLink(referralCode) {
   return `https://yourapp.com/signup?ref=${referralCode}`
 }
-stakeRewardCalculation = (amount) => {
-  console.log("amount ccccc",amount,STAKE_REWRD_PERCENT,(amount * STAKE_REWRD_PERCENT) / 100)
-  return (amount * STAKE_REWRD_PERCENT) / 100; // Calculate yield
+
+stakeRewardCalculation = (amount,fundingRateDaily) => {
+  const reward = amount * fundingRateDaily;
+  return reward
 }
 
 

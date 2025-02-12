@@ -29,7 +29,7 @@ getInStake = async (req, res) => {
     res,
     infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake"),
     200,
-    { stake: stakeList.stakeList, stakePercent: stakeList.stakePercent }
+    { stake: stakeList.stakeList,apr:stakeList.apr }
   );
 };
 
@@ -60,6 +60,16 @@ stakeReward = async (req, res) => {
     contactList
   );
 };
+getAPR = async (req,res)=>{
+  let apr = await stakingService.getAPR(req);
+  return sendSuccessResponse(
+    res,
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Stake reward"),
+    200,
+    apr
+  );
+
+}
 
 // Exporting the functions so they can be used elsewhere
 module.exports = {
@@ -67,4 +77,5 @@ module.exports = {
   getInStake,
   stakeTransactions,
   stakeReward,
+  getAPR
 };

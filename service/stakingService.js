@@ -8,7 +8,9 @@ const {
   transferPreSignedHex,
 } = require("../utils/wallet");
 const stakeModel = require("../models/stakeModel");
-const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, STAKE_REWRD_PERCENT } = require("../config");
+const { NETWORKS } = require("../config");
+const APRModel = require("../models/APRModel");
+const { getWebInstance } = require("../utils/utils");
 
 /**
  * Adds a new stake entry with specified details.
@@ -16,48 +18,48 @@ const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, STAKE_REWRD_PERCENT } = 
  * @returns {object} Object containing the calculated yield amount.
  */
 const addInStake = async (req, res) => {
-  const { amount, wallet, signature, toAddress, amountToSend, nonce1 } =
+  const { amount, wallet, signature, toAddress, amountToSend, nonce1, network } =
     req.body;
-  console.log("req.body", req.body)
-  const yieldAmount = (amount * STAKE_REWRD_PERCENT) / 100; // Calculate yield
-  console.log("req.body", yieldAmount)
+  let networkInfo = NETWORKS[network]
+  let web3Instance = getWebInstance(network)
 
-  // Calculate gas price
-  const gasPrice = (await getGasPrice()) * 1.3;
-
-  // Get nonce for transaction
-  const nonce = await getNonce(FUNDING_ADDRESS);
+  let aprValue = await APRModel.findOne({}).sort({ 'timestamps.created_At': -1 });
+  const yieldAmount = amount * aprValue.fundingRateDaily;
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
 
   // Encode transaction data
   const encoded_tx = await transferPreSignedHex(
     signature,
     toAddress,
     parseInt(amountToSend),
-    parseInt(nonce1)
+    parseInt(nonce1),
+    networkInfo.contractAddress,
+    web3Instance
   );
 
   // Estimate gas limit
   let estimateTransactionObject = {
-    nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: global.web3.utils.toHex(gasPrice),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
     data: encoded_tx,
   };
-  const gasLimit = await global.web3.eth.estimateGas(estimateTransactionObject);
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
 
   // Build transaction object
   let transactionObject = {
-    nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: global.web3.utils.toHex(gasPrice),
-    gasLimit: global.web3.utils.toHex(gasLimit),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
     data: encoded_tx,
   };
 
   // Sign and send the transaction
-  const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+  const hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
   console.log("hash", hash)
 
   // Save stake details
@@ -65,6 +67,7 @@ const addInStake = async (req, res) => {
     amount,
     wallet,
     hash: hash.transactionHash,
+    network
   });
   await staking.save();
 
@@ -78,8 +81,9 @@ const addInStake = async (req, res) => {
  * @returns {array} List of stake transactions for the specified wallet.
  */
 const getStakeList = async (req, res) => {
+  console.log("reeeee", req.body)
   let stakeList = await stakeModel.aggregate([
-    { $match: { wallet: req.body.account } },
+    { $match: { wallet: req.body.account, network: req.body.network } },
     { $sort: { "timestamps.created_At": -1 } },
     {
       $group: {
@@ -90,16 +94,20 @@ const getStakeList = async (req, res) => {
       },
     },
   ]);
-console.log("stakeList",stakeList)
+
   // If no stake records found, return empty array
   if (stakeList.length === 0) {
-    stakeList = [{ totalAmountInStake: 0, stakeBucketsList: [],stakePercent: STAKE_REWRD_PERCENT,totalRewardOnStake:0 }];
+    stakeList = [{ totalAmountInStake: 0, stakeBucketsList: [], totalRewardOnStake: 0 }];
   }
-  console.log("stakeList",stakeList,STAKE_REWRD_PERCENT)
-  
+
+  let aprValue = await APRModel.findOne({}).sort({ 'timestamps.created_At': -1 });
+  let apr = aprValue ? ((aprValue.fundingRateDaily * 365) * 100).toFixed(2) : 0;
+
+
   return {
     stakeList: stakeList,
-    stakePercent: STAKE_REWRD_PERCENT
+    apr
+
   };
 };
 
@@ -151,10 +159,17 @@ const stakeReward = async (req, res) => {
   return totalAmount;
 };
 
+getAPR = async (req, res) => {
+  let reward = await APRModel.findOne({}).sort({ 'timestamps.created_At': -1 });
+  return ((reward.fundingRateDaily * 365) * 100).toFixed(2);
+};
+
+
 // Export the controller functions
 module.exports = {
   addInStake,
   getStakeList,
   allStakeTransactionList,
   stakeReward,
+  getAPR
 };

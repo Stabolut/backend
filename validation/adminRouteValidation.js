@@ -65,6 +65,25 @@ const purchaseUSBValidation = () => [
     .withMessage(
       errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_NUMERIC("amount")
     ),
+
+    body("network")
+    .exists()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("network"))
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("network"))
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("network")
+    )
+    .bail()
+    .isIn(["Arbitrium", "Xinfin"])
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.INVALID_VALUE("network", ["Arbitrium", "Xinfin"])
+    ),
+  
 ];
 
 const checkWalletAddressValidation = () => [

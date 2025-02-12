@@ -14,11 +14,15 @@ const stakeSchema = new Schema({
   rewardAmountOnStaking: {
     type: Number,
     required: false,
+    default:0
   },
   // Field to store the stake amount
   amount: {
     type: Number,
     required: true,
+  },
+  network:{
+    type: String
   },
   // Field to store the transaction hash
   hash: {

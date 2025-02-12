@@ -45,7 +45,9 @@ const infoMessages = {
       } once your transaction is confirmed on the blockchain. Please monitor the transaction status continuously on the explorer. Once confirmed, we will send you the token. This is your transaction hash: ${hash} kindly check it on the explorer.`,
 
     TRANSFER_USB_CONFIRMATION_ON_PURCHASE: (amount, usbAddress) => `Your purchase of ${amount} USB coins has been completed successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress}.`,
-    TRANSFER_USB_PENDING_ON_PURCHASE: (amount, usbAddress) => `Your purchase request of ${amount} USB coins has been received successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress} shorlty.`
+    TRANSFER_USB_PENDING_ON_PURCHASE: (amount, usbAddress) => `Your purchase request of ${amount} USB coins has been received successfully. The USB coins have been sent to the wallet address you provided: ${usbAddress} shorlty.`,
+    USB_ETH_WITHDRAWAL_MESSAGE: (ethAmount, usbAmount) => `We have successfully transferred ${ethAmount} ETH in response to your request for a ${usbAmount} USB conversion.`,
+    USB_BTC_WITHDRAWAL_MESSAGE: (ethAmount, usbAmount) => `We have successfully transferred ${ethAmount} BTC in response to your request for a ${usbAmount} USB conversion.`
 
 
 

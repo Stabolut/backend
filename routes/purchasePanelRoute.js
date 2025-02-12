@@ -6,7 +6,8 @@ const {
   purchaseUSBWithBtc,
   checkUserWalletExistence,
   loggedInAdminUser,
-  updatePassword
+  updatePassword,
+  ethWithdrawal
 } = require("../controller/purcahsePanel");
 
 const {
@@ -164,5 +165,19 @@ router.post(
   updatePasswordValidation(),
   validateRequest,
   httpErrorHandler(updatePassword)
+);
+
+router.post(
+  route.ETH_RETURN_ON_USB,
+  // updatePasswordValidation(),
+  // validateRequest,
+  httpErrorHandler(ethWithdrawal)
+);
+
+router.post(
+  route.BTC_RETURN_ON_USB,
+  // updatePasswordValidation(),
+  // validateRequest,
+  httpErrorHandler(btcWithdrawal)
 );
 module.exports = router;

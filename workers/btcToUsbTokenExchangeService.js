@@ -5,12 +5,13 @@ const { signAndSendTransaction, getGasPrice } = require("../utils/wallet");
 const Web3 = require("web3");
 const axios = require("axios");
 const constant = require("../constants/constant"); // Importing constants
+const { getWebInstance } = require("../utils/utils");
 const web3Usb = new Web3(RPC_URI);
 
 const btcToUsbTokenExchangeService = async () => {
     cron.schedule("* * * * *", async () => {
         try {
-          
+
             const documents = await purchasenModel.find({ transferStatus: constant.constant.transferStatus.Pending, type: constant.constant.currencyType.btc });
 
             if (documents.length > 0) {
@@ -20,7 +21,7 @@ const btcToUsbTokenExchangeService = async () => {
                     const usdRate = document.conversionRate;
                     try {
                         response = await axios.get(`${BITPAY_URL}/tx/${document.transactionHash}`);
-                       
+
                     }
                     catch (e) {
                         console.log("Btc transaction not confirmed")
@@ -29,11 +30,12 @@ const btcToUsbTokenExchangeService = async () => {
 
 
                     if (response.data.confirmations > 1) {
+                        let networkInfo = NETWORKS["Arbitrium"]
+                        let web3Instance = getWebInstance(req.body.network)
 
-                        let gasPrice = (await getGasPrice()) * 2;
-                        const gasLimit = 21000000;
-                        const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
-                        const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
+                        const gasPrice = (await getGasPrice(web3Instance)) * 2;
+                        const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+                        const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
                         const tx1 = contract.methods.mint(document.userUSBWalletAddres, parseInt(document.cryptoReceivedAmount * usdRate * 1e2));
                         const encodedTx = tx1.encodeABI();
                         const transactionObject = {
@@ -46,6 +48,7 @@ const btcToUsbTokenExchangeService = async () => {
                         };
 
                         const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+
                         await purchasenModel.updateOne({ _id: document._id }, {
                             $set: {
                                 usbSentAmount: (document.cryptoReceivedAmount * usdRate),
@@ -62,7 +65,7 @@ const btcToUsbTokenExchangeService = async () => {
                     }
                 }
             } else {
-               
+
             }
         } catch (error) {
             console.error("Error in transfer token service against btc submit:", error);

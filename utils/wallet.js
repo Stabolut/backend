@@ -1,11 +1,9 @@
 
 const { CONTRACT_ADDRESS, ABI, FEE, NETWORKS } = require('../config')
-
 const privateKeyToAddress = require('ethereum-private-key-to-address')
-
 var Tx = require('ethereumjs-tx');
 const ethUtil = require("ethereumjs-util");
-
+const bitcoin = require('bitcoinjs-lib');
 
 
 
@@ -20,6 +18,17 @@ const isValidEthereumAddress = (address) => {
                 return false;
         }
 }
+
+const isValidBTCAddress = (address, network = 'mainnet') => {
+        try {
+                const networkType = network === 'testnet' ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
+                bitcoin.address.toOutputScript(address, networkType);
+                return true;
+        } catch (e) {
+                return false;
+        }
+}
+
 
 const isValidEthereumPrivateKey = (key) => {
         try {
@@ -47,9 +56,9 @@ const getNativeBalance = async (address) => {
         }
 }
 
-const getTokenBalance = async (address) => {
+const getTokenBalance = async (address, contractAddress, web3Instance) => {
         try {
-                const contract = await new global.web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+                const contract = await new web3Instance.eth.Contract(ABI, contractAddress);
 
                 const balance = await contract.methods.balanceOf(address).call();
                 return balance;
@@ -70,9 +79,9 @@ const getTransferPreSignedHash = async (to, value, nonce) => {
         }
 }
 
-const transferPreSignedHex = async (signature, to, value, nonce) => {
+const transferPreSignedHex = async (signature, to, value, nonce, contractAddress, web3Instance) => {
         try {
-                const contract = await new global.web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+                const contract = await new web3Instance.eth.Contract(ABI, contractAddress);
                 const tx_builder = await contract.methods.transferPreSigned(signature, to, value, FEE, nonce);
                 const encoded_tx = tx_builder.encodeABI();
                 return encoded_tx;
@@ -83,7 +92,7 @@ const transferPreSignedHex = async (signature, to, value, nonce) => {
 }
 
 const mint = async (to, value) => {
-       
+
         try {
                 const contract = await new global.web3.eth.Contract(ABI, CONTRACT_ADDRESS);
                 const tx_builder = await contract.methods.mint(to, value);
@@ -106,10 +115,9 @@ const getSignature = async (account, hash) => {
         }
 }
 
-const getNonce = async (account,network) => {
+const getNonce = async (account, network) => {
         try {
-
-                const count = network===NETWORKS[network].name?   await global.web3.eth.getTransactionCount(account): await global.web3.eth.getTransactionCount(account)
+                const count = await network.eth.getTransactionCount(account)
                 return count;
 
         } catch (e) {
@@ -117,9 +125,9 @@ const getNonce = async (account,network) => {
         }
 }
 
-const getGasPrice = async () => {
+const getGasPrice = async (network) => {
         try {
-                const gas = await global.web3.eth.getGasPrice();
+                const gas = await network.eth.getGasPrice();
                 return gas;
 
         } catch (e) {
@@ -149,7 +157,7 @@ const importWallet = async (key) => {
         }
 }
 
-const signAndSendTransaction = async (rawTx, privateKey) => {
+const signAndSendTransaction = async (rawTx, privateKey, web3Instance) => {
         // console.log("I reached theree")
         try {
                 var privateKey = Buffer.from(privateKey, 'hex');
@@ -157,7 +165,7 @@ const signAndSendTransaction = async (rawTx, privateKey) => {
                 var tx = new Tx(rawTx);
                 tx.sign(privateKey);
                 var serializedTx = tx.serialize();
-                const hash = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'))
+                const hash = await web3Instance.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'))
                 //console.log("Return hash ",hash)
                 return hash
         } catch (e) {
@@ -167,7 +175,7 @@ const signAndSendTransaction = async (rawTx, privateKey) => {
         }
 }
 
-const signAndSendTransactionOnPurchase = async (rawTx, privateKey) => {
+const signAndSendTransactionOnPurchase = async (rawTx, privateKey, web3Instance) => {
 
         try {
                 var privateKey = Buffer.from(privateKey, "hex");
@@ -175,7 +183,7 @@ const signAndSendTransactionOnPurchase = async (rawTx, privateKey) => {
                 var tx = new Tx(rawTx);
                 tx.sign(privateKey);
                 var serializedTx = tx.serialize();
-                const hash = await web3.eth.sendSignedTransaction(
+                const hash = await web3Instance.eth.sendSignedTransaction(
                         "0x" + serializedTx.toString("hex")
                 );
 
@@ -203,6 +211,7 @@ module.exports = {
         transferPreSignedHex,
         getGasPrice,
         mint,
-        signAndSendTransactionOnPurchase
+        signAndSendTransactionOnPurchase,
+        isValidBTCAddress
 }
 

@@ -1,30 +1,26 @@
 // Importing required modules
 const Web3 = require("web3");
 const {
-  CONTRACT_ADDRESS,
-  FUNDING_ADDRESS,
-  SOCKET_URI,
   ABI,
   TOKEN_DECIMAL,
-} = require("../config");
-const transactionModel = require("../models/transactionModel");
-const constant = require("../constants/constant");
+} = require("../../config");
+const transactionModel = require("../../models/transactionModel");
 
 
 /**
  * Function to listen for contract events and save transactions
  */
-const transactionListener = () => {
+const XDCTransactionListener = () => {
+
   // Creating a new instance of Web3 with WebSocket provider
-  const web3 = new Web3(new Web3.providers.WebsocketProvider(SOCKET_URI));
+  const web3 = new Web3(new Web3.providers.WebsocketProvider(process.env.XDC_SOCKET_URI));
 
   try {
     // Creating a contract instance
-    const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+    const contract = new web3.eth.Contract(ABI, process.env.XDC_CONTRACT_ADDRESS);
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
-      console.log("event",event)
 
       // Handling errors
       if (error) {
@@ -43,13 +39,13 @@ const transactionListener = () => {
         amountToSend: parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL,
         transactionHash: event.transactionHash,
       });
-      
+
 
       // Creating transaction object if not found in database
       if (!findTransaction) {
         // Checking if transaction is a fee transaction
-        if (event?.returnValues?.to === FUNDING_ADDRESS) {
-        
+        if (event?.returnValues?.to === process.env.XDC_FUNDING_ADDRESS) {
+
           transactionTransferType = "Fee";
           transaction = {
             senderAddress: event?.returnValues?.from,
@@ -59,10 +55,11 @@ const transactionListener = () => {
             transactionType: transactionTransferType,
             transactionStatus: "Success",
             sendDate: new Date(),
+            network: "XDC"
           };
         } else {
           // Otherwise, it's a regular transaction
-         
+
 
           transaction = {
             senderAddress: event?.returnValues?.from,
@@ -71,6 +68,7 @@ const transactionListener = () => {
             transactionHash: event.transactionHash,
             transactionType: transactionTransferType,
             sendDate: new Date(),
+            network: "XDC"
           };
         }
 
@@ -79,10 +77,10 @@ const transactionListener = () => {
         await newTransaction.save();
         console.log("Transaction saved in script");
       }
-     
+
     });
   } catch (e) {
     console.log("Run script failed", e);
   }
 };
-module.exports = { transactionListener };
+module.exports = { XDCTransactionListener };

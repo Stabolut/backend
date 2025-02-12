@@ -16,18 +16,18 @@ const addWalletValidation = () => [
       errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("account")
     ),
 
-  // body("token")
-  //   .exists()
-  //   .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("token"))
-  //   .bail()
-  //   .not()
-  //   .isEmpty()
-  //   .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("token"))
-  //   .bail()
-  //   .isString()
-  //   .withMessage(
-  //     errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("token")
-  //   ),
+  body("network")
+    .exists()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("network"))
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("network"))
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("network")
+    ).optional(),
 ]
 
 const transferTokenValidation = () => [
@@ -124,6 +124,21 @@ const transferTokenValidation = () => [
       errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("transNotes")
     )
     .optional(),
+
+
+    body("network")
+    .exists()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("network")
+    )
+    .bail()
+    .isString()
+    .withMessage(
+      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("network")
+    )
+    .optional(),
+
+
 ];
 
 walletAddressValidation = () => [

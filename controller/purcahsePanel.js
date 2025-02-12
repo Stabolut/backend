@@ -48,9 +48,17 @@ loggedInAdminUser = async (req, res) => {
 updatePassword = async (req, res) => {
   await purchase.updatePassword(req);
   return sendSuccessResponse(res, infoMessages.GENERIC.ITEM_ADD_SUCCESSFULLY("password"), 200);
-
 }
 
+ethWithdrawal = async (req, res) => {
+  let msg = await purchase.ethWithdrawal(req);
+  return sendSuccessResponse(res, msg, 200);
+}
+
+btcWithdrawal  = async (req, res) => {
+  let msg = await purchase.btcWithdrawal(req);
+  return sendSuccessResponse(res, msg, 200);
+}
 
 
 
@@ -62,5 +70,7 @@ module.exports = {
   purchaseUSBWithBtc,
   checkUserWalletExistence,
   loggedInAdminUser,
-  updatePassword
+  updatePassword,
+  ethWithdrawal,
+  btcWithdrawal
 };

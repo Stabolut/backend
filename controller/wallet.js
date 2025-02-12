@@ -127,15 +127,16 @@ withdrawToken
 
 // Function to get user by wallet
 withdrawToken = async (req, res) => {
-  console.log("i am hit thereee",req.body)
+  console.log("i am hit thereee", req.body)
   // Call the getUserByWallet function from the walletService module and await its response
-  await wallet.withdrawToken(req);
+  let data = await wallet.withdrawToken(req);
 
   // Send a success response with the message indicating successful retrieval of user by wallet
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.WITHDRAW_SUCCESSFULLY,
-    200
+    200,
+    data,
   );
 };
 

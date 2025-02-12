@@ -29,5 +29,8 @@ module.exports = {
   SUBSCRIBE: "/subscribe",
   WITHDRAW_TOKEN:"/withdrawToken",
   ADMIN_LOGIN:"/login",
-  UPDATE_PASSWORD:"/update-password"
+  UPDATE_PASSWORD:"/update-password",
+  GET_APR:"/get-apr",
+  ETH_RETURN_ON_USB:"/eth-withdraw",
+  BTC_RETURN_ON_USB:"/btc-withdraw",
 };

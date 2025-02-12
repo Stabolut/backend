@@ -18,6 +18,8 @@ const {
   BITPAY_URL,
   JWT_SECRET_KEY,
   SESSION_EXPIRES_IN,
+  NETWORKS,
+  TOKEN_DECIMAL,
 } = require("../config");
 
 const _ = require("lodash");
@@ -27,16 +29,25 @@ const {
   signAndSendTransaction,
   signAndSendTransactionOnPurchase,
   getGasPrice,
+  getNonce,
+  getTokenBalance,
+  transferPreSignedHex,
+  isValidBTCAddress,
 } = require("../utils/wallet");
 const Web3 = require("web3");
 const constant = require("../constants/constant");
 const { infoMessages } = require("../constants/messages");
 const { response } = require("express");
 const CryptoJS = require("crypto-js")
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const { getWebInstance } = require("../utils/utils");
+const conversionRateModel = require("../models/ConversionRateModel");
+const withdrawModel = require("../models/withdrawModel");
+const { sendBTC } = require("../utils/sendBtc");
 
 const web3Eth = new Web3(ETH_RPC_URL);
 const web3Usb = new Web3(RPC_URI);
+console.log("RPC_URI", RPC_URI)
 
 /**
  * Retrieves the active deposit address based on the type provided in the request query.
@@ -61,8 +72,11 @@ const getDepositAddress = async (req) => {
  */
 const purchaseUSBWithEther = async (req) => {
 
+  let networkInfo = NETWORKS[req.body.network]
+  let web3Instance = getWebInstance(req.body.network)
   let despositAmount, usdRate, admin
   const { usbAddress, hash, amount } = req.body
+
 
   // Validate recipient address
   if (!isValidEthereumAddress(req.body.usbAddress))
@@ -76,6 +90,7 @@ const purchaseUSBWithEther = async (req) => {
     transactionHash: hash
   });
 
+
   if (checkHashExist)
     throw new apiError(
       errorMessages.ADMIN.HASH_ALREADY_USED_ERROR(
@@ -84,16 +99,9 @@ const purchaseUSBWithEther = async (req) => {
       400
     );
 
-  // Fetch USD rate for conversion
-  try {
-    const response = await axios.get(ETH_TO_USD_URL);
-    usdRate = response.data.ethereum.usd;
-  }
-  catch (e) {
-    // will get from DB run the service which will save eth rate in DB after sometime
-    usdRate = constant.constant.ethToUsdRate
+  let findConversion = await conversionRateModel.findOne()
+  usdRate = findConversion.ETH_TO_USD
 
-  }
   // Get transaction receipt and details
   let resp = await web3Eth.eth.getTransactionReceipt(req.body.hash);
   let tx = await web3Eth.eth.getTransaction(req.body.hash);
@@ -140,11 +148,10 @@ const purchaseUSBWithEther = async (req) => {
 
   // Calculate gas price, gas limit, and nonce for transaction
 
-  let gasPrice = (await getGasPrice()) * 2;
-  const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
-
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
   // Create contract instance and encode transaction data
-  const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
+  const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
 
   let mintObject = await contract.methods.mint(
     req.body.usbAddress,
@@ -154,30 +161,28 @@ const purchaseUSBWithEther = async (req) => {
 
   // Construct transaction object
   let estimateTransactionObject = {
-    nonce: web3Usb.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: web3Usb.utils.toHex(gasPrice),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
     data: encodedTx,
   };
 
-  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
-
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
 
   // Build transaction object
   let transactionObject = {
-    nonce: web3Usb.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: web3Usb.utils.toHex(gasPrice),
-    gasLimit: web3Usb.utils.toHex(gasLimit),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
     data: encodedTx,
 
   };
 
   // Sign and send transaction
-  let transactionResponse = await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
-
+  let transactionResponse = await signAndSendTransactionOnPurchase(transactionObject, networkInfo.fundingKey, web3Instance);
   // Handle successful transaction
   if (transactionResponse.status === true) {
 
@@ -208,8 +213,10 @@ const purchaseUSBWithEther = async (req) => {
 const purchaseUSBWithBtc = async (req) => {
 
 
-  let depositAmount, usdRate, conversionApiResponse, document
+  let depositAmount, usdRate, document
   const { usbAddress, amount, hash } = req.body
+  let networkInfo = NETWORKS[req.body.network]
+  let web3Instance = getWebInstance(req.body.network)
 
   // Validate recipient address
   if (!isValidEthereumAddress(usbAddress))
@@ -227,18 +234,12 @@ const purchaseUSBWithBtc = async (req) => {
 
 
   // Fetch USD rate for conversion
-  try {
-    conversionApiResponse = await axios.get(BTC_TO_USD_URL);
-    usdRate = conversionApiResponse.data.bitcoin.usd;
-  }
-  catch (e) {
-    // will get from DB run the service which will save btc rate in DB after sometime
-    usdRate = constant.constant.btcToUsdRate
-
-  }
+  let findConversion = await conversionRateModel.findOne()
+  usdRate = findConversion.BTC_TO_USD
 
   // convert amount from string to float
   depositAmount = parseFloat(amount)
+  console.log("deposit amou nt", depositAmount)
 
 
   // inital save data of user transaction and transfer status will be processing if we do pending we have chance of double spending service can also triger and send coin to pending one
@@ -252,6 +253,7 @@ const purchaseUSBWithBtc = async (req) => {
 
   });
   document = await purchase.save();
+  console.log("document save", hash)
 
 
   try {
@@ -275,12 +277,10 @@ const purchaseUSBWithBtc = async (req) => {
 
     // Calculate gas price, gas limit, and nonce for transaction
 
-    let gasLimit = 21000000;
-    let gasPrice = (await getGasPrice()) * 2;
-    const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
-
+    const gasPrice = (await getGasPrice(web3Instance)) * 2;
+    const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
     // Create contract instance and encode transaction data
-    const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
+    const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
 
     let mintObject = await contract.methods.mint(
       usbAddress,
@@ -289,19 +289,23 @@ const purchaseUSBWithBtc = async (req) => {
 
     const encoded_tx = mintObject.encodeABI();
 
+
+    const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
+
     // Build transaction object
     let transactionObject = {
-      nonce: web3Usb.utils.toHex(nonce),
-      from: FUNDING_ADDRESS,
-      gasPrice: web3Usb.utils.toHex(gasPrice),
-      gasLimit: web3Usb.utils.toHex(gasLimit),
-      to: CONTRACT_ADDRESS,
+      nonce: web3Instance.utils.toHex(nonce),
+      from: networkInfo.fundingAddress,
+      gasPrice: web3Instance.utils.toHex(gasPrice),
+      gasLimit: web3Instance.utils.toHex(gasLimit),
+      to: networkInfo.contractAddress,
       data: encoded_tx,
 
     };
 
+
     // Sign and send transaction
-    let transactionResponse = await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
+    let transactionResponse = await signAndSendTransactionOnPurchase(transactionObject, networkInfo.fundingKey, web3Instance);
 
     // Handle successful transaction
     if (transactionResponse.status === true) {
@@ -373,6 +377,157 @@ const updatePassword = async (req) => {
 }
 
 
+const ethWithdrawal = async (req) => {
+
+  // First check user balance
+  let networkInfo = NETWORKS[req.body.network]
+  let web3Instance = getWebInstance(req.body.network)
+  let { signature, amount } = req.body
+  // First check user balance
+  // Validate recipient address
+  if (!isValidEthereumAddress(req.body.btcWalletAddress))
+    throw new apiError(
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS(req.body.btcWalletAddress),
+      400
+    );
+
+  let balance = await getTokenBalance(req.body.userAddress, networkInfo.contractAddress, web3Instance)
+  if (balance / TOKEN_DECIMAL < req.body.withdrawAmount) {
+    throw new apiError("Insufficient balance", 400);
+  }
+
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+
+
+  const encoded_tx = await transferPreSignedHex(
+    signature,
+    networkInfo.fundingAddress,
+    parseInt(amount),
+    parseInt(req.body.nonce),
+    networkInfo.contractAddress,
+    web3Instance
+  );
+  let estimateTransactionObject = {
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
+    data: encoded_tx,
+  };
+
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
+
+
+  let transactionObject = {
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
+    data: encoded_tx,
+  };
+  const hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
+  console.log("hash", hash)
+
+  // CALCULATE HOW MUCH ETH WILL BE TRANSFER TO USER
+
+  let findConversion = await conversionRateModel.findOne()
+  usdRate = findConversion.ETH_TO_USD
+  let ethAmountSend = parseFloat(req.body.orignalAmont) / usdRate
+  const ethGasPrice = await web3Eth.eth.getGasPrice(); // Get current gas price
+  const ethNonce = await web3Eth.eth.getTransactionCount(networkInfo.fundingAddress, "latest"); // Get nonce
+  console.log("ethAmountSend", ethAmountSend)
+  const tx = {
+    from: networkInfo.fundingAddress,
+    to: req.body.userAddress,
+    value: web3Eth.utils.toWei(ethAmountSend.toString(), "ether"), // Convert ETH to Wei
+    gas: 21000, // Standard gas limit for ETH transfer
+    gasPrice: ethGasPrice,
+    nonce: ethNonce,
+    chainId: 11155111, // Mainnet (change for testnet)
+  };
+  const balanceWei = await web3Eth.eth.getBalance(networkInfo.fundingAddress);
+  console.log("ethAmountSend tx", tx, balanceWei)
+  const signedTx = await web3Eth.eth.accounts.signTransaction(tx, networkInfo.fundingKey);
+  const txReceipt = await web3Eth.eth.sendSignedTransaction(signedTx.rawTransaction);
+  console.log("Transaction successful: ", hash, "ddddd", txReceipt);
+  let withdraw = new withdrawModel({ usbAmountToWithdraw: req.body.orignalAmont, amountToSend: ethAmountSend, ethTransactionHash: txReceipt.transactionHash, usbTransactionHash: hash.transactionHash, walletAddress: req.body.userAddress })
+  await withdraw.save()
+  return infoMessages.ADMIN.USB_ETH_WITHDRAWAL_MESSAGE(ethAmountSend.toFixed(4), req.body.orignalAmont)
+
+}
+
+const btcWithdrawal = async (req) => {
+
+  // First check user balance
+  let networkInfo = NETWORKS[req.body.network]
+  let web3Instance = getWebInstance(req.body.network)
+  let { signature, amount } = req.body
+  if (!isValidEthereumAddress(req.body.userAddress))
+    throw new apiError(
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS("Wallet"),
+      400
+    );
+  if (!isValidBTCAddress(req.body.btcWalletAddress,"testnet"))
+    throw new apiError(
+      errorMessages.ADMIN.INVALID_WALLET_ADDRESS(req.body.btcWalletAddress),
+      400
+    );
+
+  let balance = await getTokenBalance(req.body.userAddress, networkInfo.contractAddress, web3Instance)
+  if (balance / TOKEN_DECIMAL < req.body.withdrawAmount) {
+    throw new apiError("Insufficient balance", 400);
+  }
+
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+  console.log("gasPrice", gasPrice, nonce, (networkInfo.fundingAddress))
+
+  const encoded_tx = await transferPreSignedHex(
+    signature,
+    networkInfo.fundingAddress,
+    parseInt(amount),
+    parseInt(req.body.nonce),
+    networkInfo.contractAddress,
+    web3Instance
+  );
+  let estimateTransactionObject = {
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
+    data: encoded_tx,
+  };
+
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
+
+
+  let transactionObject = {
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
+    data: encoded_tx,
+  };
+  const hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
+  console.log("hash", hash)
+
+  // CALCULATE HOW MUCH BTC WILL BE TRANSFER TO USER
+  let findConversion = await conversionRateModel.findOne()
+  usdRate = findConversion.BTC_TO_USD
+  let amountSendInBtc = parseFloat(req.body.orignalAmont) / usdRate;
+  let amountInSatoshi = Math.round(amountSendInBtc * 1e8);
+  console.log("usbAmountReceived", req.body.orignalAmont, "amountSendInBtc", amountSendInBtc, "amountInSatoshi", amountInSatoshi)
+  //tb1qzupjjggtwqkg2yyxuvqgs6xf9d5jl57scxyr8n
+  const txid = await sendBTC(req.body.btcWalletAddress, amountInSatoshi);
+  let withdraw = new withdrawModel({ usbAmountToWithdraw: req.body.orignalAmont, amountToSend: amountSendInBtc, btcTransactionHash: txid, usbTransactionHash: hash.transactionHash, walletAddress: req.body.btcWalletAddress })
+  await withdraw.save()
+  return infoMessages.ADMIN.USB_BTC_WITHDRAWAL_MESSAGE(amountSendInBtc.toFixed(8), req.body.orignalAmont)
+
+}
+
 
 // Export the controller functions
 module.exports = {
@@ -381,5 +536,7 @@ module.exports = {
   purchaseUSBWithBtc,
   checkUserWalletExistence,
   loggedInAdminUser,
-  updatePassword
+  updatePassword,
+  ethWithdrawal,
+  btcWithdrawal
 };

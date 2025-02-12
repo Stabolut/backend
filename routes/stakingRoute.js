@@ -5,6 +5,7 @@ const {
   getInStake,
   stakeTransactions,
   stakeReward,
+  getAPR
 } = require("../controller/staking");
 
 const {
@@ -40,6 +41,7 @@ router.post(
   validateRequest,
   httpErrorHandler(addInStake)
 );
+
 
 /**
  * @swagger
@@ -131,5 +133,11 @@ router.post(
   validateRequest,
   httpErrorHandler(stakeReward)
 );
+
+router.get(
+  route.GET_APR,
+  httpErrorHandler(getAPR)
+);
+
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const nodeMailer = require('nodemailer')
 const config = require('../config')
-
+console.log("Ddddd",config.HOST,config.PORT,config.HOST,config.USER,config.PASS)
 
 module.exports = {
     mailOptions(to, subject, html) {
@@ -14,6 +14,16 @@ module.exports = {
         }
     },
     transporter: nodeMailer.createTransport({
+        // host: config.HOST,
+        // port: config.PORT,
+        // service: config.HOST,
+        // // secure: true,
+
+        // auth: {
+        //     user: config.USER, // generated ethereal user
+        //     pass: config.PASS, // generated ethereal password
+        // },
+
         host: config.HOST,
         port: config.PORT,
         service: config.HOST,
@@ -23,9 +33,7 @@ module.exports = {
             user: config.USER, // generated ethereal user
             pass: config.PASS, // generated ethereal password
         },
-        // tls: {
-        //     rejectUnauthorized: true
-        // }
+       
 
 
 

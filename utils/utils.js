@@ -1,5 +1,6 @@
 const config = require("../config");
 const jwt = require("jsonwebtoken");
+const { NETWORKS } = require("../config")
 
 const isValidJWT = function (token) {
   try {
@@ -11,7 +12,19 @@ const isValidJWT = function (token) {
     return false;
   }
 };
+getWebInstance = (network) => {
+  if (network === NETWORKS.Arbitrium.name) {
+    return global.web3
+  }
+  else {
+    return global.web3xdc
+  }
+
+  // let web = network === NETWORKS.Arbitrium.name ? global.web3 : global.web3xdc
+  return web
+}
 
 module.exports = {
   isValidJWT: isValidJWT,
+  getWebInstance: getWebInstance
 };

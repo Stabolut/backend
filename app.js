@@ -28,17 +28,23 @@ const {
   automatedWalletStakingService,
 } = require("./workers/automatedWalletStakingService");
 const { stakingRewardService } = require("./workers/stakingRewardService");
-const { transactionListener } = require("./workers/transactionListener");
+
 const {
   sendReferralTokenService,
 } = require("./workers/sendReferralTokenService");
+const { startTransactionTracking } = require("./workers/BitmexTransaction")
 
 const { MONGO_URL, RPC_URI } = require("./config");
 const router = require("./routes/index");
 const socketIO = require("./workers/socketService");
 const { constant } = require("./constants/constant");
 const { swaggerUi, swaggerDocs } = require("./docs/swagger");
-const { StakingRewardCalculationService } = require("./workers/StakingRewardCalculationService");
+const { stakingRewardCalculations } = require("./workers/stakingRewardCalculations")
+const { APRRateService } = require("./workers/APRRateService");
+const { USDTConversionService } = require("./workers/USDTConversionService");
+//Workers
+const { XDCTransactionListener } = require("./workers/TransactionListener/XDCTransactionListener");
+const { arbitriumTransactionListener } = require("./workers/TransactionListener/arbitriumTransactionListener");
 
 const app = express();
 mongoose.Promise = global.Promise;
@@ -116,13 +122,24 @@ const httpServer = http.createServer(app);
 socketIO(httpServer);
 
 // Run scripts for various services
-// transactionListener();
+arbitriumTransactionListener();
+XDCTransactionListener()
+
+
+
+
+
+
 // automatedWalletStakingService();
 // stakingRewardService();
-ethToUsbTokenExchangeService();
-btcToUsbTokenExchangeService();
-sendReferralTokenService();
-//StakingRewardCalculationService()
+// ethToUsbTokenExchangeService();
+// btcToUsbTokenExchangeService();
+// sendReferralTokenService();
+//APRRateService()
+// stakingRewardCalculations()
+
+// startTransactionTracking()
+// USDTConversionService()
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {

@@ -13,13 +13,14 @@ const {
   signAndSendTransaction,
   transferPreSignedHex,
 } = require("../utils/wallet");
-const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ABI, TOKEN_DECIMAL } = require("../config");
+const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ABI, TOKEN_DECIMAL, NETWORKS } = require("../config");
 const _ = require("lodash");
 const { createWallet, signAndSendTransactionOnPurchase } = require("../utils/wallet");
 const apiError = require("../error/apiError");
 const constant = require("../constants/constant");
 const { generateReferralCode, generateReferralLink } = require("../utils/helperMethod");
 const stakeModel = require("../models/stakeModel");
+const { getWebInstance } = require("../utils/utils");
 
 /**
  * Creates a new wallet for a user.
@@ -115,10 +116,9 @@ addWallet = async (req) => {
  */
 transferTokens = async (req) => {
 
-  let r = await getTokenBalance("0x6983cB83052588AF94Cf9a937e664698e4E63490")
-  console.log("balance", r,address)
+  let networkInfo = NETWORKS[req.body.network]
+  let web3Instance = getWebInstance(req.body.network)
 
-  return
   const body = _.pick(req.body, [
     "signature",
     "toAddress",
@@ -127,8 +127,10 @@ transferTokens = async (req) => {
     "senderAddress",
     "originalAmount",
     "transNotes",
-    "netowrk"
+    "network"
   ]);
+
+
 
   if (!isValidEthereumAddress(body.toAddress))
     throw new apiError(
@@ -136,36 +138,39 @@ transferTokens = async (req) => {
       400
     );
 
-  const gasPrice = (await getGasPrice()) * 2;
-  const nonce = await getNonce(FUNDING_ADDRESS);
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+
+
   const encoded_tx = await transferPreSignedHex(
     body.signature,
     body.toAddress,
     parseInt(body.amount),
-    parseInt(body.nonce)
+    parseInt(body.nonce),
+    networkInfo.contractAddress,
+    web3Instance
   );
-
   // Construct transaction object
   let estimateTransactionObject = {
-    nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: global.web3.utils.toHex(gasPrice),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
     data: encoded_tx,
   };
 
-  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
 
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
   let transactionObject = {
-    nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: global.web3.utils.toHex(gasPrice),
-    gasLimit: global.web3.utils.toHex(gasLimit),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
     data: encoded_tx,
   };
 
-  const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+  const hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
 
   // Send notification to the recipient
   let token = await walletModel.findOne({ account: body.toAddress });
@@ -210,7 +215,7 @@ transferTokens = async (req) => {
       transactionHash: hash.transactionHash,
       sendDate: new Date(),
       transactionNotes: body.transNotes,
-      network: network
+      network: body.network
     };
 
     const newTransaction = new transactionModel(transaction);
@@ -226,7 +231,7 @@ transferTokens = async (req) => {
  * @returns {Object} The list of transactions associated with the wallet.
  */
 transactionsList = async (req) => {
-  const { walletAddress } = req.body;
+  const { walletAddress, network } = req.body;
 
   let wallet = await transactionModel.find({
     $and: [
@@ -236,7 +241,13 @@ transactionsList = async (req) => {
           { receiverAddress: walletAddress },
         ],
       },
-      { transactionType: "Transfer" },
+      {
+        $or: [
+          { transactionType: "Transfer" },
+          { transactionType: "Staking" },
+        ],
+      },
+      { network: network },
     ],
   }).sort({ "timestamps.created_At": -1 });
 
@@ -249,19 +260,26 @@ transactionsList = async (req) => {
  * @returns {Object} The limited list of transactions associated with the wallet.
  */
 transactionsListWithLimit = async (req) => {
-  const { walletAddress } = req.body;
+  const { walletAddress, network } = req.body;
 
-  let wallet = await transactionModel.find({
-    $and: [
-      {
-        $or: [
-          { senderAddress: walletAddress },
-          { receiverAddress: walletAddress },
-        ],
-      },
-      { transactionType: "Transfer" },
-    ],
-  })
+  let wallet = await transactionModel
+    .find({
+      $and: [
+        {
+          $or: [
+            { senderAddress: walletAddress },
+            { receiverAddress: walletAddress },
+          ],
+        },
+        {
+          $or: [
+            { transactionType: "Transfer" },
+            { transactionType: "Staking" },
+          ],
+        },
+        { network: network },
+      ],
+    })
     .sort({ "timestamps.created_At": -1 })
     .limit(5);
 
@@ -275,6 +293,7 @@ transactionsListWithLimit = async (req) => {
 updateTransactionStatus = async (req) => {
 
   const { walletAddress, transactionHash, status } = req.body;
+  console.log("ccccc", walletAddress, transactionHash, status)
   let wallet = await transactionModel.findOne({
     $and: [
       {
@@ -283,16 +302,20 @@ updateTransactionStatus = async (req) => {
           { receiverAddress: walletAddress },
         ],
       },
-      { transactionType: "Transfer" },
-      { transactionStatus: "Pending" },
+      {
+        $or: [
+          { transactionType: "Transfer" },
+          { transactionType: "Staking" },
+        ],
+      },
       { transactionHash: transactionHash },
     ],
   });
+  console.log("wallet", wallet)
 
-  if (!wallet)
-    throw new apiError(
-      errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash)
-    );
+
+  if (!wallet) throw new apiError(errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash));
+  if (wallet.transactionStatus === "Success") return;
 
   if (status === 1) {
     console.log("Found")
@@ -373,20 +396,23 @@ getFreeCoin = async (req) => {
   const nonce = await getNonce(FUNDING_ADDRESS);
   const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
 
+  console.log("send amount", req.body.walletAddress, parseInt(req.body.amount * TOKEN_DECIMAL))
+
   let tx1 = await contract.methods.mint(
     req.body.walletAddress,
     parseInt(req.body.amount * TOKEN_DECIMAL)
   );
   const encodedTx = tx1.encodeABI();
-
+  console.log("encodedTx", encodedTx)
   // Construct transaction object
   let estimateTransactionObject = {
     nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
+    from: "0x23F6b853d75f34F0A16dc97E4A2827cE8aA9A7C7",
     gasPrice: global.web3.utils.toHex(gasPrice),
-    to: CONTRACT_ADDRESS,
+    to: "0x24c8479b8af9742c5160e0c29197e87a584cfe99",
     data: encodedTx,
   };
+  console.log("ddddddd", estimateTransactionObject)
 
   const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
 
@@ -407,14 +433,21 @@ getFreeCoin = async (req) => {
     $set: { freeUSBCoinsBalance: existingWallet.freeUSBCoinsBalance + amount }
   });
   return 'Coin send successfully'
-
-
 }
+
+
+
 withdrawToken = async (req) => {
 
-  let gasPrice = (await getGasPrice()) * 2;
-  const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
-  const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+  let networkInfo = NETWORKS[req.body.network]
+  let web3Instance = getWebInstance(req.body.network)
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+
+
+  const contract = new web3.eth.Contract(ABI, networkInfo.contractAddress);
+
 
   let tx1 = await contract.methods.mint(
     req.body.walletAddress,
@@ -424,32 +457,46 @@ withdrawToken = async (req) => {
 
   // Construct transaction object
   let estimateTransactionObject = {
-    nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: global.web3.utils.toHex(gasPrice),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
     data: encodedTx,
   };
 
-  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
 
   let transactionObject = {
-    nonce: web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: web3.utils.toHex(gasPrice),
-    gasLimit: web3.utils.toHex(gasLimit),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
     data: encodedTx,
 
   };
-  await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
-
-
+  console.log("withdraw 1cddd")
+  const data = await signAndSendTransactionOnPurchase(transactionObject, networkInfo.fundingKey, web3Instance);
   await stakeModel.updateMany(
-    { wallet: req.body.walletAddress },
-    { $set: { rewardAmountOnStaking: 0 } } // Resets balance to zero for all records with the wallet
+    { wallet: req.body.walletAddress, network: networkInfo.name }, // Filter by wallet address and network name
+    { $set: { rewardAmountOnStaking: 0 } } // Reset the reward amount on staking to zero
   );
-  return 'Coin withdraw successfully'
+  console.log("withdraw 1vfffff", data.hash)
+  let transaction = {
+    senderAddress: networkInfo.fundingAddress,
+    receiverAddress: req.body.walletAddress,
+    amountToSend: req.body.amount,
+    transactionHash: data.hash.transactionHash,
+    sendDate: new Date(),
+    network: req.body.network,
+    transactionType: "Staking"
+  };
+  console.log("withdraw 1cdeeee")
+  const newTransaction = new transactionModel(transaction);
+  await newTransaction.save();
+
+
+  return newTransaction
 
 }
 

@@ -1,20 +1,10 @@
-
-const { mint } = require("../utils/wallet");
-const automateStakeModel = require("../models/automateStakeModel");
-const { CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY } = require("../config");
-const {
-    isValidEthereumAddress,
-    getGasPrice,
-    getNonce,
-    signAndSendTransaction,
-    transferPreSignedHex,
-} = require("../utils/wallet");
 const stakeModel = require("../models/stakeModel");
+const APRModel = require("../models/APRModel");
 const { stakeRewardCalculation } = require("../utils/helperMethod");
 
 const runTask = async () => {
- 
-try {
+
+    try {
         const oneDayAgo = new Date(Date.now() - 3 * 60 * 1000); // 3 minutes ago //new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
         const eligibleTransactions = await stakeModel.find({
             $or: [
@@ -22,35 +12,30 @@ try {
                 { lastRewardGiven_At: { $lte: oneDayAgo } }, // Subsequent rewards: lastRewardGiven_At is 24+ hours ago
             ],
         });
-      
+
         if (eligibleTransactions.length > 0) {
-           
-         
 
-                for (const transaction of eligibleTransactions) {
-                    //reward calculation
-                    let reward = stakeRewardCalculation(transaction.amount)
-                    // Update user wallet balance
-                    await stakeModel.updateOne(
-                        { _id: transaction._id },
-                        {
-                            lastRewardGiven_At: new Date(),
-                            $inc: { rewardAmountOnStaking: reward },
-                        }
-                    );
-
-                }
-        
-    }
-
-
+            let aprValue = await APRModel.findOne({}).sort({ 'timestamps.created_At': -1 });
+            for (const transaction of eligibleTransactions) {
+                //reward calculation
+                let reward = stakeRewardCalculation(transaction.amount, aprValue.fundingRateDaily)
+                // Update user wallet balance
+                await stakeModel.updateOne(
+                    { _id: transaction._id },
+                    {
+                        lastRewardGiven_At: new Date(),
+                        $inc: { rewardAmountOnStaking: reward },
+                    }
+                );
+            }
+        }
     } catch (error) {
         console.error('Error updating withdrawable status:', error);
     }
 };
 
 
-const StakingRewardCalculationService = () => {
+const stakingRewardCalculations = () => {
 
     // const interval = 60 * 60 * 1000; // 1 hour in milliseconds
     const interval = 60 * 1000;
@@ -65,4 +50,4 @@ const StakingRewardCalculationService = () => {
     }, interval);
 };
 
-module.exports = { StakingRewardCalculationService };
+module.exports = { stakingRewardCalculations };
