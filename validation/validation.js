@@ -18,35 +18,35 @@ const subscribeValidation = () => [
     .custom((value) => validateEmail(value))
     .withMessage(errorMessages.AUTH.VALIDATION_FAILED("Email")),
 
-  body("name")
-    .exists()
-    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("name"))
-    .bail()
-    .not()
-    .isEmpty()
-    .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("name"))
-    .bail()
-    .isString()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("name")
-    ),
+  // body("name")
+  //   .exists()
+  //   .withMessage(errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("name"))
+  //   .bail()
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage(errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("name"))
+  //   .bail()
+  //   .isString()
+  //   .withMessage(
+  //     errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("name")
+  //   ),
 
-  body("cname")
-    .exists()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("Company name")
-    )
-    .bail()
-    .not()
-    .isEmpty()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("Company name")
-    )
-    .bail()
-    .isString()
-    .withMessage(
-      errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("Company name")
-    ),
+  // body("cname")
+  //   .exists()
+  //   .withMessage(
+  //     errorMessages.COMMON_VALIDATION_ERROR.KEY_MISSING("Company name")
+  //   )
+  //   .bail()
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage(
+  //     errorMessages.COMMON_VALIDATION_ERROR.EMPTY_VALUE("Company name")
+  //   )
+  //   .bail()
+  //   .isString()
+  //   .withMessage(
+  //     errorMessages.COMMON_VALIDATION_ERROR.VALUE_MUST_BE_STRING("Company name")
+  //   ),
 ];
 
 const contactUsValidation = () => [

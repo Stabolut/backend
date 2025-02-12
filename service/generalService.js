@@ -59,13 +59,14 @@ const subscribedEmail = async (req, res) => {
   });
 
   if (existingUser) {
-    throw new apiError("You have already subscribed. Thank you for joining!");
+    // throw new apiError("You have already subscribed. Thank you for joining!");
+    return "You have already subscribed. Thank you for joining!";
   } else {
     // Create a new subscription entry
     const newSubscribe = new subscribeModel({
       email: req.body.email,
-      name: req.body.name,
-      companyName: req.body.cname,
+      // name: req.body.name,
+      // companyName: req.body.cname,
     });
     await newSubscribe.save();
     return "Your subscription has been successfully saved. Thank you for subscribing!";

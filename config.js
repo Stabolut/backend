@@ -24,10 +24,11 @@ const USER = process.env.EMAIL_USER;
 const PASS = process.env.EMAIL_PASS;
 const HOST = process.env.EMAIL_HOST;
 const SUBJECT = "Support Email";
-const EMAL_SENDER = "cto@stabolut.com";
-const RECEIPENT = "cto@stabolut.com";
+const EMAL_SENDER = "julianb@dastai.com";
+const RECEIPENT = "Eneko@stabolut.com";
+//const RECEIPENT = "fahadhali329@gmail.com";
 const ETH_RPC_URL = process.env.ETH_RPC_URL;
-const TOKEN_DECIMAL=1e2
+const TOKEN_DECIMAL = 1e2
 
 
 const emailForAdminContact = (name, email, message, phone) => {

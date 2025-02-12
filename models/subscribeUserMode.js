@@ -13,12 +13,12 @@ const subscribeSchema = new Schema({
   // Field to store the name
   name: {
     type: String,
-    required: true,
+    required: false,
   },
   // Field to store the company name
   companyName: {
     type: String,
-    required: true,
+    required: false,
   },
   // Field to indicate whether APK is sent or not
   apkSent: {
