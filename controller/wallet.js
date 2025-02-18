@@ -123,7 +123,6 @@ getFreeCoin = async (req, res) => {
   );
 };
 
-withdrawToken
 
 // Function to get user by wallet
 withdrawToken = async (req, res) => {

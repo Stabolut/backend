@@ -19,8 +19,12 @@ const constant = {
     Success: "Success"
   },
   freeUSBLimit: 50,
-  contractInternalTransactionAddress:"0x0000000000000000000000000000000000000000",
-  referralRewardAmount:20
+  contractInternalTransactionAddress: "0x0000000000000000000000000000000000000000",
+  referralRewardAmount: 20,
+  network: {
+    XDC: "XDC",
+    Arbitrium: "Arbitrium"
+  },
 };
 
 module.exports = {

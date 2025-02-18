@@ -22,7 +22,7 @@ const arbitriumTransactionListener = () => {
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
-      console.log(`event ${process.env.ARB_CONTRACT_ADDRESS}`, event)
+      console.log(`event ${process.env.ARB_CONTRACT_ADDRESS}`, event, parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL)
 
       // Handling errors
       if (error) {
@@ -33,6 +33,7 @@ const arbitriumTransactionListener = () => {
       // Initializing transaction type
       let transactionTransferType = "Transfer";
       let transaction;
+      console.log("event?.returnValues?.value", event?.returnValues?.value)
 
       // Finding existing transaction in the database
       let findTransaction = await transactionModel.findOne({
@@ -57,7 +58,7 @@ const arbitriumTransactionListener = () => {
             transactionType: transactionTransferType,
             transactionStatus: "Success",
             sendDate: new Date(),
-             network: "Arbitrium"
+            network: "Arbitrium"
           };
         } else {
           // Otherwise, it's a regular transaction
@@ -74,7 +75,7 @@ const arbitriumTransactionListener = () => {
           };
         }
 
-        // Saving the new transaction to the database
+        //Saving the new transaction to the database
         const newTransaction = new transactionModel(transaction);
         await newTransaction.save();
         console.log("Transaction saved in script");

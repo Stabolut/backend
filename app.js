@@ -39,8 +39,8 @@ const router = require("./routes/index");
 const socketIO = require("./workers/socketService");
 const { constant } = require("./constants/constant");
 const { swaggerUi, swaggerDocs } = require("./docs/swagger");
-const { stakingRewardCalculations } = require("./workers/stakingRewardCalculations")
-const { APRRateService } = require("./workers/APRRateService");
+const { stakingRewardCalculations } = require("./workers/StakeReward/stakingRewardCalculations")
+const { APRRateService } = require("./workers/StakeReward/APRRateService");
 const { USDTConversionService } = require("./workers/USDTConversionService");
 //Workers
 const { XDCTransactionListener } = require("./workers/TransactionListener/XDCTransactionListener");
@@ -122,9 +122,11 @@ const httpServer = http.createServer(app);
 socketIO(httpServer);
 
 // Run scripts for various services
-arbitriumTransactionListener();
-XDCTransactionListener()
-
+ arbitriumTransactionListener();
+ XDCTransactionListener();
+sendReferralTokenService();
+stakingRewardCalculations()
+APRRateService()
 
 
 
@@ -134,9 +136,8 @@ XDCTransactionListener()
 // stakingRewardService();
 // ethToUsbTokenExchangeService();
 // btcToUsbTokenExchangeService();
-// sendReferralTokenService();
-//APRRateService()
-// stakingRewardCalculations()
+
+
 
 // startTransactionTracking()
 // USDTConversionService()

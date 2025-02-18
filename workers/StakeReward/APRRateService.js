@@ -1,11 +1,10 @@
 const cron = require("node-cron");
 const { default: axios } = require("axios");
-const APRModel = require("../models/APRModel");
+const APRModel = require("../../models/APRModel");
 
 const runTask = async () => {
     try {
         let { data } = await axios.get(process.env.bitmexUrl)
-        console.log("data", data)
         let rate = new APRModel({ fundingRateDaily: data[0].fundingRateDaily})
         await rate.save()
     } catch (e) {

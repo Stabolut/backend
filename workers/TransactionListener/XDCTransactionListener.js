@@ -59,8 +59,6 @@ const XDCTransactionListener = () => {
           };
         } else {
           // Otherwise, it's a regular transaction
-
-
           transaction = {
             senderAddress: event?.returnValues?.from,
             receiverAddress: event?.returnValues?.to,

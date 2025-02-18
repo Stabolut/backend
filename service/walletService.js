@@ -21,6 +21,8 @@ const constant = require("../constants/constant");
 const { generateReferralCode, generateReferralLink } = require("../utils/helperMethod");
 const stakeModel = require("../models/stakeModel");
 const { getWebInstance } = require("../utils/utils");
+const { coinMint } = require("../utilityService/coinMint")
+
 
 /**
  * Creates a new wallet for a user.
@@ -42,6 +44,7 @@ addWallet = async (req) => {
     account: req.body.account,
   });
 
+
   if (!isEmpty(req.body.referenceCode)) {
 
     let referralUser = await walletModel.findOne({
@@ -60,6 +63,12 @@ addWallet = async (req) => {
 
       throw new apiError(
         "It looks like you've already made a referral. If you have another code to enter, please note that you can only make one referral per account. If you need assistance, feel free to reach out",
+        400
+      );
+
+    if (existingWallet && existingWallet.referralCode === req.body.referenceCode)
+      throw new apiError(
+        "It looks like you are referring to yourself, which is not allowed.",
         400
       );
 
@@ -105,6 +114,13 @@ addWallet = async (req) => {
       referralLink: referralLink
     });
     newWallet.save();
+    if (req.body.type === "New") {
+      console.log("constant.freeUSBLimit", constant.constant.freeUSBLimit, constant.constant.network.Arbitrium)
+      await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.Arbitrium)
+      await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.XDC)
+
+      // send some testing coin
+    }
     return { data: newWallet, message: "Wallet document with the given account does not exist, so create it." }
   }
 };
@@ -189,25 +205,15 @@ transferTokens = async (req) => {
     }
   }
 
-  // Save transaction details
-  let findTransaction = await transactionModel.findOne({
-    senderAddress: { $regex: new RegExp(`^${body.senderAddress}$`, 'i') },
-    receiverAddress: { $regex: new RegExp(`^${body.toAddress}$`, 'i') },
-    amountToSend: body.amount / TOKEN_DECIMAL,
-    transactionHash: hash.transactionHash,
-  });
-
-  if (findTransaction) {
-
-    // Update the transaction if it already exists and `transactionNotes` is provided
-    if (body.transNotes && !findTransaction.transactionNotes) {
-
-      findTransaction.transactionNotes = body.transNotes;
-      await findTransaction.save();
-    }
-  } else {
-
-    // Create a new transaction if it doesn't exist
+  let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
+  if (transactionFound && body.transNotes) {
+    console.log("inside abababa")
+    await transactionModel.updateOne(
+      { _id: transactionFound._id }, // Filter by wallet address and network name
+      { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL, } } // Reset the reward amount on staking to zero
+    );
+  }
+  else {
     let transaction = {
       senderAddress: body.senderAddress,
       receiverAddress: body.toAddress,
@@ -217,11 +223,9 @@ transferTokens = async (req) => {
       transactionNotes: body.transNotes,
       network: body.network
     };
-
     const newTransaction = new transactionModel(transaction);
     await newTransaction.save();
   }
-
   return { txnHash: hash };
 };
 
@@ -245,6 +249,7 @@ transactionsList = async (req) => {
         $or: [
           { transactionType: "Transfer" },
           { transactionType: "Staking" },
+          { transactionType: "Free Mint" }
         ],
       },
       { network: network },
@@ -275,6 +280,7 @@ transactionsListWithLimit = async (req) => {
           $or: [
             { transactionType: "Transfer" },
             { transactionType: "Staking" },
+            { transactionType: "Free Mint" }
           ],
         },
         { network: network },
@@ -306,6 +312,7 @@ updateTransactionStatus = async (req) => {
         $or: [
           { transactionType: "Transfer" },
           { transactionType: "Staking" },
+          { transactionType: "Free Mint" },
         ],
       },
       { transactionHash: transactionHash },
@@ -412,7 +419,7 @@ getFreeCoin = async (req) => {
     to: "0x24c8479b8af9742c5160e0c29197e87a584cfe99",
     data: encodedTx,
   };
-  console.log("ddddddd", estimateTransactionObject)
+
 
   const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
 
@@ -438,7 +445,7 @@ getFreeCoin = async (req) => {
 
 
 withdrawToken = async (req) => {
-
+  console.log("ccccc", req.body)
 
   let networkInfo = NETWORKS[req.body.network]
   let web3Instance = getWebInstance(req.body.network)
@@ -475,13 +482,12 @@ withdrawToken = async (req) => {
     data: encodedTx,
 
   };
-  console.log("withdraw 1cddd")
+
   const data = await signAndSendTransactionOnPurchase(transactionObject, networkInfo.fundingKey, web3Instance);
   await stakeModel.updateMany(
     { wallet: req.body.walletAddress, network: networkInfo.name }, // Filter by wallet address and network name
     { $set: { rewardAmountOnStaking: 0 } } // Reset the reward amount on staking to zero
   );
-  console.log("withdraw 1vfffff", data.hash)
   let transaction = {
     senderAddress: networkInfo.fundingAddress,
     receiverAddress: req.body.walletAddress,
@@ -491,10 +497,19 @@ withdrawToken = async (req) => {
     network: req.body.network,
     transactionType: "Staking"
   };
-  console.log("withdraw 1cdeeee")
-  const newTransaction = new transactionModel(transaction);
-  await newTransaction.save();
 
+  let transactionFound = await transactionModel.findOne({ transactionHash: data.hash.transactionHash })
+  let newTransaction
+  if (transactionFound) {
+    newTransaction = await transactionModel.updateOne(
+      { _id: transactionFound._id }, // Filter by wallet address and network name
+      { $set: { transactionType: "Staking", amountToSend: req.body.amount } } // Reset the reward amount on staking to zero
+    );
+  }
+  else {
+    newTransaction = new transactionModel(transaction);
+    await newTransaction.save();
+  }
 
   return newTransaction
 

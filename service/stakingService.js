@@ -60,7 +60,6 @@ const addInStake = async (req, res) => {
 
   // Sign and send the transaction
   const hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
-  console.log("hash", hash)
 
   // Save stake details
   const staking = new stakeModel({
