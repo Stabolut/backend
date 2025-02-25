@@ -24,15 +24,10 @@ const {
 const {
   btcToUsbTokenExchangeService,
 } = require("./workers/btcToUsbTokenExchangeService");
-const {
-  automatedWalletStakingService,
-} = require("./workers/automatedWalletStakingService");
-const { stakingRewardService } = require("./workers/stakingRewardService");
 
 const {
   sendReferralTokenService,
 } = require("./workers/sendReferralTokenService");
-const { startTransactionTracking } = require("./workers/BitmexTransaction")
 
 const { MONGO_URL, RPC_URI } = require("./config");
 const router = require("./routes/index");
@@ -45,6 +40,7 @@ const { USDTConversionService } = require("./workers/USDTConversionService");
 //Workers
 const { XDCTransactionListener } = require("./workers/TransactionListener/XDCTransactionListener");
 const { arbitriumTransactionListener } = require("./workers/TransactionListener/arbitriumTransactionListener");
+const { AirdropService } = require("./workers/airdropSerivce")
 
 const app = express();
 mongoose.Promise = global.Promise;
@@ -122,25 +118,17 @@ const httpServer = http.createServer(app);
 socketIO(httpServer);
 
 // Run scripts for various services
- arbitriumTransactionListener();
- XDCTransactionListener();
+arbitriumTransactionListener();
+XDCTransactionListener();
 sendReferralTokenService();
 stakingRewardCalculations()
-APRRateService()
-
-
-
-
-
+APRRateService();
+USDTConversionService();
+ethToUsbTokenExchangeService();
+btcToUsbTokenExchangeService();
+AirdropService()
 // automatedWalletStakingService();
 // stakingRewardService();
-// ethToUsbTokenExchangeService();
-// btcToUsbTokenExchangeService();
-
-
-
-// startTransactionTracking()
-// USDTConversionService()
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {

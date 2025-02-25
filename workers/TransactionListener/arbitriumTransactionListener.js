@@ -22,8 +22,7 @@ const arbitriumTransactionListener = () => {
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
-      console.log(`event ${process.env.ARB_CONTRACT_ADDRESS}`, event, parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL)
-
+     
       // Handling errors
       if (error) {
         console.error(error);

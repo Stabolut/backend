@@ -38,6 +38,7 @@ const purchaseSchema = new Schema({
   type: {
     type: String,
   },
+  
   // Field to store timestamps for document creation and updation
   timestamps: {
     created_At: { type: Date, default: Date.now },

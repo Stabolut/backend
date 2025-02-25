@@ -25,6 +25,8 @@ const constant = {
     XDC: "XDC",
     Arbitrium: "Arbitrium"
   },
+  // airdrop: 0.001//0.1%
+  airdrop: 0.001//0.1%
 };
 
 module.exports = {

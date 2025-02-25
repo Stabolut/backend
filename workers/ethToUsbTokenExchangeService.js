@@ -1,19 +1,19 @@
 const cron = require("node-cron"); // Importing node-cron for scheduling tasks
 const purchasenModel = require("../models/purchaseModel"); // Importing the purchase model
-const { ABI, CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, ETH_RPC_URL, RPC_URI } = require("../config"); // Importing necessary configurations
-const { signAndSendTransaction, getGasPrice } = require("../utils/wallet"); // Importing functions for signing and sending transactions
+const { ABI,ETH_RPC_URL, NETWORKS } = require("../config"); // Importing necessary configurations
+const { signAndSendTransaction, getGasPrice, getNonce } = require("../utils/wallet"); // Importing functions for signing and sending transactions
 const Web3 = require("web3"); // Importing Web3 for interacting with Ethereum blockchain
 const constant = require("../constants/constant"); // Importing constants
-
+const { getWebInstance } = require("../utils/utils");
 // Creating Web3 instances for Ethereum and USB blockchains
 const web3Eth = new Web3(ETH_RPC_URL);
-const web3Usb = new Web3(RPC_URI);
+
 
 // Function to exchange Ethereum for USB token
 const ethToUsbTokenExchangeService = async () => {
     cron.schedule("* * * * *", async () => { // Scheduling the task to run every minute
         try {
-          
+
             const documents = await purchasenModel.find({ transferStatus: constant.constant.transferStatus.Pending, type: constant.constant.currencyType.eth }); // Finding pending transactions for Ethereum
 
             if (documents.length > 0) { // If pending transactions are found
@@ -27,32 +27,48 @@ const ethToUsbTokenExchangeService = async () => {
                         console.log("Transaction failed. Please check the transaction.");
                         continue; // Continue to the next iteration
                     } else if (resp.status === true) { // If transaction is successful
+
+                        let networkInfo = NETWORKS[constant.constant.network.Arbitrium]
+                        let web3Instance = getWebInstance(constant.constant.network.Arbitrium)
+                        const gasPrice = (await getGasPrice(web3Instance)) * 2;
+                        const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+                        const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
+
                         const tx = await web3Eth.eth.getTransaction(document.transactionHash); // Get transaction details
                         const depositAmount = tx.value; // Extract deposit amount
                         const usdRate = document.conversionRate; // Extract USD conversion rate
 
-                        // Calculate gas price, gas limit, and nonce for transaction
-                        let gasPrice = (await getGasPrice()) * 2;
-                        const gasLimit = 21000000;
-                        const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
 
-                        // Create contract instance and encode transaction data
-                        const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
-                        const tx1 = contract.methods.mint(document.userUSBWalletAddres, parseInt((depositAmount / 1e18) * usdRate * 1e2));
-                        const encodedTx = tx1.encodeABI();
+                        let mintObject = await contract.methods.mint(
+                            document.userUSBWalletAddres,
+                            parseInt((depositAmount / 1e18) * usdRate * 1e2)
+                        );
+                        const encodedTx = mintObject.encodeABI();
 
-                        // Build transaction object
-                        const transactionObject = {
-                            nonce: web3Usb.utils.toHex(nonce),
-                            from: FUNDING_ADDRESS,
-                            gasPrice: web3Usb.utils.toHex(gasPrice),
-                            gasLimit: web3Usb.utils.toHex(gasLimit),
-                            to: CONTRACT_ADDRESS,
-                            data: encodedTx
+                        // Construct transaction object
+                        let estimateTransactionObject = {
+                            nonce: web3Instance.utils.toHex(nonce),
+                            from: networkInfo.fundingAddress,
+                            gasPrice: web3Instance.utils.toHex(gasPrice),
+                            to: networkInfo.contractAddress,
+                            data: encodedTx,
                         };
 
+                        const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
+
+                        // Build transaction object
+                        let transactionObject = {
+                            nonce: web3Instance.utils.toHex(nonce),
+                            from: networkInfo.fundingAddress,
+                            gasPrice: web3Instance.utils.toHex(gasPrice),
+                            gasLimit: web3Instance.utils.toHex(gasLimit),
+                            to: networkInfo.contractAddress,
+                            data: encodedTx,
+
+                        };
                         // Sign and send transaction
-                        const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+
+                        let hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
 
                         // Update purchase model with transaction details
                         await purchasenModel.updateOne({ _id: document._id }, {
@@ -68,7 +84,6 @@ const ethToUsbTokenExchangeService = async () => {
                     }
                 }
             } else {
-               
             }
         } catch (error) {
             console.error("Error in transfer token service againt ether submit:", error); // Log any errors that occur during the process

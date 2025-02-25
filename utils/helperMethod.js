@@ -58,7 +58,7 @@ function generateReferralLink(referralCode) {
   return `https://yourapp.com/signup?ref=${referralCode}`
 }
 
-stakeRewardCalculation = (amount,fundingRateDaily) => {
+stakeRewardCalculation = (amount, fundingRateDaily) => {
   const reward = amount * fundingRateDaily;
   return reward
 }
@@ -73,7 +73,7 @@ module.exports = {
   generateOTP,
   generateReferralCode,
   generateReferralLink,
-  stakeRewardCalculation
+  stakeRewardCalculation,
 
 }
 

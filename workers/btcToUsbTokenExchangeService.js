@@ -1,12 +1,12 @@
 const cron = require("node-cron");
 const purchasenModel = require("../models/purchaseModel");
-const { ABI, CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, RPC_URI, BITPAY_URL } = require("../config");
-const { signAndSendTransaction, getGasPrice } = require("../utils/wallet");
+const { ABI, FUNDING_KEY, BITPAY_URL, NETWORKS } = require("../config");
+const { signAndSendTransaction, getGasPrice, getNonce } = require("../utils/wallet");
 const Web3 = require("web3");
 const axios = require("axios");
 const constant = require("../constants/constant"); // Importing constants
 const { getWebInstance } = require("../utils/utils");
-const web3Usb = new Web3(RPC_URI);
+
 
 const btcToUsbTokenExchangeService = async () => {
     cron.schedule("* * * * *", async () => {
@@ -18,36 +18,52 @@ const btcToUsbTokenExchangeService = async () => {
 
                 for (const document of documents) {
                     let response
-                    const usdRate = document.conversionRate;
+
                     try {
                         response = await axios.get(`${BITPAY_URL}/tx/${document.transactionHash}`);
+                        console.log("response", response.data.status.confirmed)
 
                     }
                     catch (e) {
-                        console.log("Btc transaction not confirmed")
+                        console.log("Btc transaction not confirmed", e, `${BITPAY_URL}/tx/${document.transactionHash}`)
                         continue
                     }
 
 
-                    if (response.data.confirmations > 1) {
-                        let networkInfo = NETWORKS["Arbitrium"]
-                        let web3Instance = getWebInstance(req.body.network)
+                    if (response.data.status.confirmed === true) {
 
+                        let networkInfo = NETWORKS[constant.constant.network.Arbitrium]
+                        let web3Instance = getWebInstance(constant.constant.network.Arbitrium)
                         const gasPrice = (await getGasPrice(web3Instance)) * 2;
                         const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
                         const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
+                        const usdRate = document.conversionRate; // Extract USD conversion rate
                         const tx1 = contract.methods.mint(document.userUSBWalletAddres, parseInt(document.cryptoReceivedAmount * usdRate * 1e2));
                         const encodedTx = tx1.encodeABI();
-                        const transactionObject = {
-                            nonce: web3Usb.utils.toHex(nonce),
-                            from: FUNDING_ADDRESS,
-                            gasPrice: web3Usb.utils.toHex(gasPrice),
-                            gasLimit: web3Usb.utils.toHex(gasLimit),
-                            to: CONTRACT_ADDRESS,
-                            data: encodedTx
+
+                        // Construct transaction object
+                        let estimateTransactionObject = {
+                            nonce: web3Instance.utils.toHex(nonce),
+                            from: networkInfo.fundingAddress,
+                            gasPrice: web3Instance.utils.toHex(gasPrice),
+                            to: networkInfo.contractAddress,
+                            data: encodedTx,
                         };
 
-                        const hash = await signAndSendTransaction(transactionObject, FUNDING_KEY);
+                        const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
+
+                        // Build transaction object
+                        let transactionObject = {
+                            nonce: web3Instance.utils.toHex(nonce),
+                            from: networkInfo.fundingAddress,
+                            gasPrice: web3Instance.utils.toHex(gasPrice),
+                            gasLimit: web3Instance.utils.toHex(gasLimit),
+                            to: networkInfo.contractAddress,
+                            data: encodedTx,
+
+                        };
+
+                        let hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
 
                         await purchasenModel.updateOne({ _id: document._id }, {
                             $set: {
