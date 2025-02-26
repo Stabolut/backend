@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const walletModel = require("../models/walletModel");
 const { getTokenBalance, getGasPrice, getNonce, signAndSendTransaction } = require("../utils/wallet");
-const { NETWORKS, TOKEN_DECIMAL, ABI } = require("../config");
+const { NETWORKS, ABI, TOKEN_DECIMAL } = require("../config");
 const constant = require("../constants/constant"); // Importing constants
 const { getWebInstance } = require("../utils/utils");
 const airdropModel = require("../models/airdropModel");
@@ -15,8 +15,6 @@ const runTask = async () => {
 
         if (walletList.length > 0) {
             for (var account of walletList) {
-
-                const TOKEN_DECIMAL = 1e2; // 100
 
                 let balance = await getTokenBalance(account.account, networkInfo.contractAddress, web3Instance);
                 let actualBalance = balance / TOKEN_DECIMAL; // Convert from smallest unit to readable tokens
@@ -87,7 +85,6 @@ const runTask = async () => {
 };
 
 const AirdropService = async () => {
-
     cron.schedule("0 0 * * *", async () => { // Runs every 24 hours at midnight UTC
         try {
             console.log("Airdrop service started");
