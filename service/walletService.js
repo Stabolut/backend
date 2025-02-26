@@ -117,7 +117,7 @@ addWallet = async (req) => {
     if (req.body.type === "New") {
       console.log("constant.freeUSBLimit", constant.constant.freeUSBLimit, constant.constant.network.Arbitrium)
       await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.Arbitrium)
-      await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.XDC)
+      //await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.XDC)
 
       // send some testing coin
     }

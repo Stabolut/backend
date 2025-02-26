@@ -3,8 +3,6 @@ const emailUtility = require("../utils/emailUtility");
 const config = require("../config");
 const subscribeModel = require("../models/subscribeUserMode");
 const apiError = require("../error/apiError");
-const { coinMint } = require("../utilityService/coinMint");
-const { getTokenBalance, getNativeBalance } = require("../utils/wallet");
 
 /**
  * Sends a contact email to the admin.
@@ -19,11 +17,6 @@ const contactUsEmail = async (req, res) => {
   if (req?.body?.subject) {
     subject = " - " + req?.body?.subject;
   }
-  
-   coinMint("0xf2A35DF0C163896d60ACa8420d5E4C63280261De", 5, "XDC")
-  // coinMint("0x8B0ee62eDa42DbFDE7A640A7b1b34212fc901D54", 5, "Arbitrium")
-
-  return
 
   // Wrap the email sending logic in a promise
   return new Promise((resolve, reject) => {
