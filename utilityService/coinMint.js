@@ -41,30 +41,30 @@ const coinMint = async (walletAddress, amount, network) => {
 
         let hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
         console.log("hash", hash.transactionHash)
-        let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
-        console.log("transactionFound", transactionFound)
-        let newTransaction
-        if (transactionFound) {
-            console.log("insidebvbcb")
-            newTransaction = await transactionModel.updateOne(
-                { _id: transactionFound._id }, // Filter by wallet address and network name
-                { $set: { transactionType: "Free Mint", amountToSend: constant.constant.freeUSBLimit, senderAddress: networkInfo.fundingAddress } } // Reset the reward amount on staking to zero
-            );
-        }
-        else {
+        // let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
+        // console.log("transactionFound", transactionFound)
+        // let newTransaction
+        // if (transactionFound) {
+        //     console.log("insidebvbcb")
+        //     newTransaction = await transactionModel.updateOne(
+        //         { _id: transactionFound._id }, // Filter by wallet address and network name
+        //         { $set: { transactionType: "Free Mint", amountToSend: constant.constant.freeUSBLimit, senderAddress: networkInfo.fundingAddress } } // Reset the reward amount on staking to zero
+        //     );
+        // }
+        // else {
 
-            let transaction = {
-                senderAddress: constant.constant.contractInternalTransactionAddress,
-                receiverAddress: walletAddress,
-                amountToSend: constant.constant.freeUSBLimit,
-                transactionHash: hash.transactionHash,
-                sendDate: new Date(),
-                network: network,
-                transactionType: "Free Mint"
-            };
-            const newTransaction = new transactionModel(transaction);
-            await newTransaction.save();
-        }
+        //     let transaction = {
+        //         senderAddress: constant.constant.contractInternalTransactionAddress,
+        //         receiverAddress: walletAddress,
+        //         amountToSend: constant.constant.freeUSBLimit,
+        //         transactionHash: hash.transactionHash,
+        //         sendDate: new Date(),
+        //         network: network,
+        //         transactionType: "Free Mint"
+        //     };
+        //     const newTransaction = new transactionModel(transaction);
+        //     await newTransaction.save();
+        // }
         return
     }
     catch (e) {
