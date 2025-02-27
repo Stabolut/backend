@@ -40,7 +40,7 @@ const { infoMessages } = require("../constants/messages");
 const CryptoJS = require("crypto-js")
 const jwt = require("jsonwebtoken");
 const { getWebInstance } = require("../utils/utils");
-const conversionRateModel = require("../models/ConversionRateModel");
+const conversionRateModel = require("../models/conversionRateModel");
 const withdrawModel = require("../models/withdrawModel");
 const { sendBTC } = require("../utils/sendBtc");
 

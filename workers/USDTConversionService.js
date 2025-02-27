@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const { default: axios } = require("axios");
 const { ETH_TO_USD_URL, BTC_TO_USD_URL } = require("../config")
-const conversionRateModel = require("../models/ConversionRateModel")
+const conversionRateModel = require("../models/conversionRateModel")
 
 
 const runTask = async () => {
