@@ -1,7 +1,7 @@
 const axios = require("axios")
 const { BITCOIN_TOKEN, SECRET_KEY, BITCOIN_NODE_URI, STAKE_REWRD_PERCENT } = require("../config")
 var CryptoJS = require("crypto-js");
-console.log("uri", `${BITCOIN_NODE_URI}?token=${BITCOIN_TOKEN}`)
+
 
 
 createAndEncryptWallet = async () => {

@@ -23,12 +23,14 @@ awardPoint = async (senderAddress) => {
                         let receiveTokenArray = token.tokenArray;
                         for (var i = 0; i < receiveTokenArray.length; i++) {
                             try {
-                                console.log("token", receiveTokenArray[i].token);
+
                                 if (receiveTokenArray[i].token) {
                                     await sendNotificationService(
                                         receiveTokenArray[i].token,
                                         `You've earned the First Transfer badge and 10 tokens!`,
                                         'Congratulations! 🎉',
+                                        "",
+                                        { address: senderAddress }
 
 
                                     );
@@ -62,6 +64,8 @@ awardPoint = async (senderAddress) => {
                                         receiveTokenArray[i].token,
                                         `You've earned the Frequent Sender badge and 50 tokens!`,
                                         'Congratulations! 🎉',
+                                        "",
+                                        { address: senderAddress }
 
 
                                     );
@@ -95,6 +99,8 @@ awardPoint = async (senderAddress) => {
                                         receiveTokenArray[i].token,
                                         `You've earned the Power User badge and 100 tokens!`,
                                         'Congratulations! 🎉',
+                                        "",
+                                        { address: senderAddress }
 
 
                                     );

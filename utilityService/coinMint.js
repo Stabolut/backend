@@ -39,8 +39,8 @@ const coinMint = async (walletAddress, amount, network) => {
         };
 
 
-        let hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
-        console.log("hash", hash.transactionHash)
+        await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
+     
         // let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
         // console.log("transactionFound", transactionFound)
         // let newTransaction

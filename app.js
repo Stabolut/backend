@@ -103,7 +103,7 @@ connectToMongo();
 // Connect to Web3 blockchain
 newWeb3Connection();
 app.get(constant.api.prefix, (req, res) => {
-  res.send("Node version 7 is running wit new backend");
+  res.send("Node version 8 is running wit new backend");
 });
 
 // Define API routes
