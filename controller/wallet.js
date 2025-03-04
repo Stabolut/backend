@@ -140,7 +140,6 @@ withdrawToken = async (req, res) => {
 
 // Function to get user by wallet
 transactionCount = async (req, res) => {
-  console.log("count")
   // Call the getUserByWallet function from the walletService module and await its response
   let data = await wallet.transactionCount(req);
 
