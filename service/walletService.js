@@ -238,8 +238,7 @@ transferTokens = async (req) => {
       { upsert: true } // If transaction doesn't exist, insert it
     );
   }
-
-  // await awardPoint(body.senderAddress)
+  await awardPoint(body.senderAddress)
   return { txnHash: hash };
 };
 
