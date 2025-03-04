@@ -210,27 +210,27 @@ transferTokens = async (req) => {
   }
 
   let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
-  console.log("transactionFound",transactionFound)
+ 
   if (transactionFound && body.transNotes) {
-    console.log("inside abababa")
+    
     await transactionModel.updateOne(
       { _id: transactionFound._id }, // Filter by wallet address and network name
       { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL, } } // Reset the reward amount on staking to zero
     );
   }
-  // else {
-  //   let transaction = {
-  //     senderAddress: body.senderAddress,
-  //     receiverAddress: body.toAddress,
-  //     amountToSend: body.amount / TOKEN_DECIMAL,
-  //     transactionHash: hash.transactionHash,
-  //     sendDate: new Date(),
-  //     transactionNotes: body.transNotes,
-  //     network: body.network
-  //   };
-  //   const newTransaction = new transactionModel(transaction);
-  //   await newTransaction.save();
-  // }
+  else {
+    let transaction = {
+      senderAddress: body.senderAddress,
+      receiverAddress: body.toAddress,
+      amountToSend: body.amount / TOKEN_DECIMAL,
+      transactionHash: hash.transactionHash,
+      sendDate: new Date(),
+      transactionNotes: body.transNotes,
+      network: body.network
+    };
+    const newTransaction = new transactionModel(transaction);
+    await newTransaction.save();
+  }
   await awardPoint(body.senderAddress)
   return { txnHash: hash };
 };
