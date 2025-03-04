@@ -26,7 +26,12 @@ const constant = {
     Arbitrium: "Arbitrium"
   },
   // airdrop: 0.001//0.1%
-  airdrop: 0.001//0.1%
+  airdrop: 0.001,//0.1%
+
+  points: {
+    transferPoint: 10
+
+  }
 };
 
 module.exports = {

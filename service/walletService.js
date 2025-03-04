@@ -21,7 +21,8 @@ const constant = require("../constants/constant");
 const { generateReferralCode, generateReferralLink } = require("../utils/helperMethod");
 const stakeModel = require("../models/stakeModel");
 const { getWebInstance } = require("../utils/utils");
-const { coinMint } = require("../utilityService/coinMint")
+const { coinMint } = require("../utilityService/coinMint");
+const { awardPoint } = require("../utils/gamification");
 
 
 /**
@@ -132,6 +133,9 @@ addWallet = async (req) => {
  */
 transferTokens = async (req) => {
 
+
+
+
   let networkInfo = NETWORKS[req.body.network]
   let web3Instance = getWebInstance(req.body.network)
 
@@ -206,6 +210,7 @@ transferTokens = async (req) => {
   }
 
   let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
+  console.log("transactionFound",transactionFound)
   if (transactionFound && body.transNotes) {
     console.log("inside abababa")
     await transactionModel.updateOne(
@@ -213,19 +218,20 @@ transferTokens = async (req) => {
       { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL, } } // Reset the reward amount on staking to zero
     );
   }
-  else {
-    let transaction = {
-      senderAddress: body.senderAddress,
-      receiverAddress: body.toAddress,
-      amountToSend: body.amount / TOKEN_DECIMAL,
-      transactionHash: hash.transactionHash,
-      sendDate: new Date(),
-      transactionNotes: body.transNotes,
-      network: body.network
-    };
-    const newTransaction = new transactionModel(transaction);
-    await newTransaction.save();
-  }
+  // else {
+  //   let transaction = {
+  //     senderAddress: body.senderAddress,
+  //     receiverAddress: body.toAddress,
+  //     amountToSend: body.amount / TOKEN_DECIMAL,
+  //     transactionHash: hash.transactionHash,
+  //     sendDate: new Date(),
+  //     transactionNotes: body.transNotes,
+  //     network: body.network
+  //   };
+  //   const newTransaction = new transactionModel(transaction);
+  //   await newTransaction.save();
+  // }
+  await awardPoint(body.senderAddress)
   return { txnHash: hash };
 };
 
@@ -337,39 +343,59 @@ updateTransactionStatus = async (req) => {
 
 
 mintCoin = async (req) => {
+  console.log("i am hit")
+
+  let networkInfo = NETWORKS[constant.constant.network.Arbitrium]
+  let web3Instance = getWebInstance(constant.constant.network.Arbitrium)
 
 
-  let gasPrice = (await getGasPrice()) * 2;
-  const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);
-  const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+  const gasPrice = (await getGasPrice(web3Instance)) * 2;
+  const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
+  const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
 
-  let tx1 = await contract.methods.mint(
+
+  console.log("dccc", parseFloat(req.body.amount * TOKEN_DECIMAL), req.body, TOKEN_DECIMAL)
+
+
+  let mintObject = await contract.methods.mint(
     req.body.walletAddress,
-    parseInt(req.body.amount * TOKEN_DECIMAL)
+    parseFloat(req.body.amount * TOKEN_DECIMAL)
   );
-  const encodedTx = tx1.encodeABI();
+
+
+  const encodedTx = mintObject.encodeABI();
+
 
   // Construct transaction object
   let estimateTransactionObject = {
-    nonce: global.web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: global.web3.utils.toHex(gasPrice),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    to: networkInfo.contractAddress,
     data: encodedTx,
   };
 
-  const gasLimit = await web3.eth.estimateGas(estimateTransactionObject);
+  const gasLimit = await web3Instance.eth.estimateGas(estimateTransactionObject);
 
   let transactionObject = {
-    nonce: web3.utils.toHex(nonce),
-    from: FUNDING_ADDRESS,
-    gasPrice: web3.utils.toHex(gasPrice),
-    gasLimit: web3.utils.toHex(gasLimit),
-    to: CONTRACT_ADDRESS,
+    nonce: web3Instance.utils.toHex(nonce),
+    from: networkInfo.fundingAddress,
+    gasPrice: web3Instance.utils.toHex(gasPrice),
+    gasLimit: web3Instance.utils.toHex(gasLimit),
+    to: networkInfo.contractAddress,
     data: encodedTx,
 
   };
-  await signAndSendTransactionOnPurchase(transactionObject, FUNDING_KEY);
+
+  await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
+
+  const updatedWallet = await walletModel.findOneAndUpdate(
+    { account: req.body.walletAddress, "badges.title": req.body.badgeTitle },
+    { $set: { "badges.$.rewardSent": true } }, // Update only the matching badge
+    { new: true } // Return updated document
+  );
+
+
   return 'Coin send successfully'
 
 
@@ -515,6 +541,205 @@ withdrawToken = async (req) => {
 
 }
 
+const transactionCount = async (req) => {
+  const { walletAddress, network } = req.body;
+  let wallet = await walletModel.findOne({ account: walletAddress })
+  let allBadges = []
+  if (wallet.badges.length > 0) {
+
+    const earnedBadges = wallet?.badges.reduce((acc, badge) => {
+      acc[badge.title] = badge.rewardSent; // Store rewardSent status for each earned badge
+      return acc;
+    }, {});
+    console.log("earnedBadges1", earnedBadges, earnedBadges.hasOwnProperty('First Transfer'),)
+
+    allBadges = [
+      {
+        category: 'Transfer Badges',
+        data: [
+          {
+            id: '1',
+            name: 'First Transfer',
+            description: 'Complete your first transfer',
+            reward: '10 Tokens',
+            icon: 'send',
+            amount: 10,
+            rewardSent: earnedBadges['First Transfer'] || false,
+            earned: earnedBadges.hasOwnProperty('First Transfer'),
+          },
+          {
+            id: '2',
+            name: 'Frequent Sender',
+            description: 'Complete 10 transfers',
+            reward: '50 Tokens',
+            icon: 'repeat',
+            amount: 50,
+            rewardSent: earnedBadges['Frequent Sender'] || false,
+            earned: earnedBadges.hasOwnProperty('Frequent Sender'),
+          },
+          {
+            id: '3',
+            name: 'Power User',
+            description: 'Complete 50 transfers',
+            reward: '100 Tokens',
+            icon: 'flash-on',
+            amount: 100,
+            rewardSent: earnedBadges['Power User'] || false,
+            earned: earnedBadges.hasOwnProperty('Power User'),
+          },
+        ],
+      },
+      {
+        category: 'Staking Badges',
+        data: [
+          {
+            id: '4',
+            name: 'First Stake',
+            description: 'Stake tokens for the first time',
+            reward: '20 Tokens',
+            icon: 'lock',
+            amount: 20,
+            rewardSent: earnedBadges['First Stake'] || false,
+            earned: earnedBadges.hasOwnProperty('First Stake'),
+          },
+          {
+            id: '5',
+            name: 'Staking Pro',
+            description: 'Stake 1,000 tokens',
+            reward: '200 Tokens',
+            icon: 'trending-up',
+            amount: 200,
+            rewardSent: earnedBadges['Staking Pro'] || false,
+            earned: earnedBadges.hasOwnProperty('Staking Pro'),
+          },
+          {
+            id: '6',
+            name: 'Whale Staker',
+            description: 'Stake 10,000 tokens',
+            reward: '1,000 Tokens',
+            icon: 'monetization-on',
+            amount: 1000,
+            rewardSent: earnedBadges['Whale Staker'] || false,
+            earned: earnedBadges.hasOwnProperty('Whale Staker'),
+          },
+        ],
+      },
+    ];
+  }
+  else {
+
+
+    allBadges = [
+      {
+        category: 'Transfer Badges',
+        data: [
+          {
+            id: '1',
+            name: 'First Transfer',
+            description: 'Complete your first transfer',
+            reward: '10 Tokens',
+            icon: 'send',
+            amount: 10,
+            rewardSent: false,
+            earned: false,
+          },
+          {
+            id: '2',
+            name: 'Frequent Sender',
+            description: 'Complete 10 transfers',
+            reward: '50 Tokens',
+            icon: 'repeat',
+            amount: 50,
+            rewardSent: false,
+            earned: false,
+          },
+          {
+            id: '3',
+            name: 'Power User',
+            description: 'Complete 50 transfers',
+            reward: '100 Tokens',
+            icon: 'flash-on',
+            amount: 100,
+            rewardSent: false,
+            earned: false,
+          },
+        ],
+      },
+      {
+        category: 'Staking Badges',
+        data: [
+          {
+            id: '4',
+            name: 'First Stake',
+            description: 'Stake tokens for the first time',
+            reward: '20 Tokens',
+            icon: 'lock',
+            amount: 20,
+            rewardSent: false,
+            earned: false,
+          },
+          {
+            id: '5',
+            name: 'Staking Pro',
+            description: 'Stake 1,000 tokens',
+            reward: '200 Tokens',
+            icon: 'trending-up',
+            amount: 200,
+            rewardSent: false,
+            earned: false,
+          },
+          {
+            id: '6',
+            name: 'Whale Staker',
+            description: 'Stake 10,000 tokens',
+            reward: '1,000 Tokens',
+            icon: 'monetization-on',
+            amount: 1000,
+            rewardSent: false,
+            earned: false,
+          },
+        ],
+      },
+    ];
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // console.log("dd",walletAddress, network)
+
+  // const count = await transactionModel.countDocuments({
+  //   $and: [
+  //     {
+  //       $or: [
+  //         { senderAddress: walletAddress },
+  //       ],
+  //     },
+  //     {
+  //       transactionType: { $in: ["Transfer", "Staking"] }, // Using $in for cleaner syntax
+  //     },
+  //     { network: network },
+  //   ],
+  // });
+
+  return { allBadges };
+};
+
 
 
 // Export the controller functions
@@ -527,5 +752,6 @@ module.exports = {
   updateTransactionStatus,
   mintCoin,
   getFreeCoin,
-  withdrawToken
+  withdrawToken,
+  transactionCount
 };

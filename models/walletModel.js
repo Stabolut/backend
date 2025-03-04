@@ -33,6 +33,18 @@ const walletSchema = new Schema({
     type: String,
 
   },
+  points: {
+    type: Number,
+    default: 0,
+  },
+  badges: [
+    {
+      title: { type: String, required: true }, // e.g., "First Transfer"
+      rewardSent: { type: Boolean, default: false }, // Track if reward is sent
+      earnedAt: { type: Date, default: Date.now }, // When the badge was earned
+    },
+  ],
+
   // Field to store timestamps for document creation and updation
   timestamps: {
     created_At: { type: Date, default: Date.now },

@@ -9,7 +9,8 @@ const {
   mintCoin,
   transactionsList,
   getFreeCoin,
-  withdrawToken
+  withdrawToken,
+  transactionCount
 } = require("../controller/wallet");
 
 const {
@@ -294,6 +295,13 @@ router.post(
   coinMintValidation(),
   validateRequest,
   httpErrorHandler(getFreeCoin)
+);
+
+router.post(
+  route.TRANSACTIONS_COUNT,
+  walletAddressValidation(),
+  validateRequest,
+  httpErrorHandler(transactionCount)
 );
 
 module.exports = router;

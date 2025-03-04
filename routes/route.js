@@ -33,4 +33,5 @@ module.exports = {
   GET_APR:"/get-apr",
   ETH_RETURN_ON_USB:"/eth-withdraw",
   BTC_RETURN_ON_USB:"/btc-withdraw",
+  TRANSACTIONS_COUNT:"/transaction-count"
 };
