@@ -210,28 +210,36 @@ transferTokens = async (req) => {
   }
 
   let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
- 
-  if (transactionFound && body.transNotes) {
-    
-    await transactionModel.updateOne(
-      { _id: transactionFound._id }, // Filter by wallet address and network name
-      { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL, } } // Reset the reward amount on staking to zero
-    );
+
+  if (transactionFound) {
+    // Update transactionNotes if it's not already set or needs to be updated
+    if (!transactionFound.transactionNotes && body.transNotes) {
+      await transactionModel.updateOne(
+        { _id: transactionFound._id },
+        { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL } }
+      );
+    }
   }
   else {
-    let transaction = {
-      senderAddress: body.senderAddress,
-      receiverAddress: body.toAddress,
-      amountToSend: body.amount / TOKEN_DECIMAL,
-      transactionHash: hash.transactionHash,
-      sendDate: new Date(),
-      transactionNotes: body.transNotes,
-      network: body.network
-    };
-    const newTransaction = new transactionModel(transaction);
-    await newTransaction.save();
+    console.log("inside")
+    await transactionModel.updateOne(
+      { transactionHash: hash.transactionHash }, // Unique identifier
+      {
+        $setOnInsert: { // These fields only get set if the document is newly inserted
+          senderAddress: body.senderAddress,
+          receiverAddress: body.toAddress,
+          amountToSend: body.amount / TOKEN_DECIMAL,
+          sendDate: new Date(),
+          transactionHash: hash.transactionHash,
+          network: body.network,
+        },
+        $set: { transactionNotes: body.transNotes || "" } // Always update notes if available
+      },
+      { upsert: true } // If transaction doesn't exist, insert it
+    );
   }
-  await awardPoint(body.senderAddress)
+
+  // await awardPoint(body.senderAddress)
   return { txnHash: hash };
 };
 
