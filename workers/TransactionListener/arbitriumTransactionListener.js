@@ -50,8 +50,8 @@ const arbitriumTransactionListener = () => {
 
           transactionTransferType = "Fee";
           transaction = {
-            senderAddress: event?.returnValues?.from,
-            receiverAddress: event?.returnValues?.to,
+            senderAddress: event?.returnValues?.from.toLowerCase(),
+            receiverAddress: event?.returnValues?.to.toLowerCase(),
             amountToSend: parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL,
             transactionHash: event.transactionHash,
             transactionType: transactionTransferType,
@@ -64,8 +64,8 @@ const arbitriumTransactionListener = () => {
 
 
           transaction = {
-            senderAddress: event?.returnValues?.from,
-            receiverAddress: event?.returnValues?.to,
+            senderAddress: event?.returnValues?.from.toLowerCase(),
+            receiverAddress: event?.returnValues?.to.toLowerCase(),
             amountToSend: parseFloat(event?.returnValues?.value) / 1e2,
             transactionHash: event.transactionHash,
             transactionType: transactionTransferType,

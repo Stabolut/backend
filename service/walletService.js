@@ -45,11 +45,8 @@ addWallet = async (req) => {
   let existingWallet = await walletModel.findOne({
     account: account,
   });
-  console.log("bofydd", req.body)
 
-
-  if (!isEmpty(req.body.referenceCode)) {
-    console.log("Reqche first")
+if (!isEmpty(req.body.referenceCode)) {
 
     let referralUser = await walletModel.findOne({
       referralCode: { $regex: new RegExp(`^${req.body.referenceCode}$`, 'i') },
@@ -86,10 +83,8 @@ addWallet = async (req) => {
   }
 
   if (existingWallet) {
-    console.log("Reqche second")
 
     if (isEmpty(existingWallet.referralCode)) {
-      console.log("Not inside")
 
       let referralCode = generateReferralCode()
       let referralLink = generateReferralLink(referralCode)
@@ -97,18 +92,14 @@ addWallet = async (req) => {
       existingWallet.referralLink = referralLink
       existingWallet = await existingWallet.save()
     }
-    console.log("reached")
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
-      console.log("reached 1")
       return { data: existingWallet, message: "Token already exists in the TokenArray" }
     } else {
-      console.log("reached 2")
       existingWallet.tokenArray.push({ token: req.body.token });
       existingWallet.save();
       return { data: existingWallet, message: "Token does not exist in the tokenArray, so add it." }
     }
   } else {
-    console.log("Reqche last")
 
     let referralCode = generateReferralCode()
     let referralLink = generateReferralLink(referralCode)
@@ -318,6 +309,9 @@ transactionsListWithLimit = async (req) => {
 updateTransactionStatus = async (req) => {
 
   const { walletAddress, transactionHash, status } = req.body;
+  console.log("walletAddress, transactionHash, status",walletAddress, transactionHash, status,"0x60873ff01781979d0b7073c6f471255c17c881f86ad9b54b354567dde27b97ee")
+  let v= await transactionModel.findOne({transactionHash: transactionHash})
+  console.log("dddd",v)
 
   let wallet = await transactionModel.findOne({
     $and: [
@@ -337,7 +331,7 @@ updateTransactionStatus = async (req) => {
       { transactionHash: transactionHash },
     ],
   });
-
+console.log("wallet",wallet)
 
 
   if (!wallet) throw new apiError(errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash));

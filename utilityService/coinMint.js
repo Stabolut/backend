@@ -9,9 +9,7 @@ const { getGasPrice, getNonce, signAndSendTransaction } = require("../utils/wall
 const coinMint = async (walletAddress, amount, network, deviceId) => {
 
     try {
-        console.log("walletAddress", walletAddress, amount, network, deviceId)
         let wallet = await walletModel.findOne({ account: walletAddress.toLowerCase() })
-        console.log("wallet", wallet)
         if (!wallet) return
         if (wallet.intialCoinTransfer) {
             console.log("Already transfer to this wallet")
@@ -27,7 +25,6 @@ const coinMint = async (walletAddress, amount, network, deviceId) => {
             return
         }
 
-        console.log("nextt",)
         //Arbitrium
         let networkInfo = NETWORKS[network]
         let web3Instance = getWebInstance(network)
@@ -58,7 +55,6 @@ const coinMint = async (walletAddress, amount, network, deviceId) => {
             data: encodedTx,
 
         };
-
 
         await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
 
