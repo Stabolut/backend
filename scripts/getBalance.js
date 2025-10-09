@@ -17,7 +17,7 @@ console.log('Getting Ethereum address info.....');
 var addr = ('ETHEREUM-ADDRESS-HERE');
 
 // Show the address in the console.
-console.log('Address:', addr);
+
 
 // Use Wb3 to get the balance of the address, convert it and then show it in the console.
 web3.eth.getBalance(addr, function (error, result) {

@@ -80,7 +80,7 @@ const addInStake = async (req, res) => {
  * @returns {array} List of stake transactions for the specified wallet.
  */
 const getStakeList = async (req, res) => {
-  console.log("reeeee", req.body)
+  
   let stakeList = await stakeModel.aggregate([
     { $match: { wallet: req.body.account, network: req.body.network } },
     { $sort: { "timestamps.created_At": -1 } },

@@ -40,13 +40,16 @@ createUserWallet = async () => {
  * @returns {string} A message indicating the success or failure of the operation.
  */
 addWallet = async (req) => {
+  let account = req.body.account.toLowerCase();
 
   let existingWallet = await walletModel.findOne({
-    account: req.body.account,
+    account: account,
   });
+  console.log("bofydd", req.body)
 
 
   if (!isEmpty(req.body.referenceCode)) {
+    console.log("Reqche first")
 
     let referralUser = await walletModel.findOne({
       referralCode: { $regex: new RegExp(`^${req.body.referenceCode}$`, 'i') },
@@ -58,7 +61,7 @@ addWallet = async (req) => {
     );
     let referralExist = await referralModel.findOne({
       referenceWallet: { $regex: new RegExp(`^${referralUser.account}$`, 'i') },
-      refferalWallet: { $regex: new RegExp(`^${req.body.account}$`, 'i') },
+      refferalWallet: { $regex: new RegExp(`^${account}$`, 'i') },
     });
     if (referralExist)
 
@@ -76,16 +79,17 @@ addWallet = async (req) => {
 
     const referral = new referralModel({
       referenceWallet: referralUser.account,
-      refferalWallet: req.body.account,
+      refferalWallet: account,
 
     });
     referral.save();
   }
 
   if (existingWallet) {
-
+    console.log("Reqche second")
 
     if (isEmpty(existingWallet.referralCode)) {
+      console.log("Not inside")
 
       let referralCode = generateReferralCode()
       let referralLink = generateReferralLink(referralCode)
@@ -93,35 +97,32 @@ addWallet = async (req) => {
       existingWallet.referralLink = referralLink
       existingWallet = await existingWallet.save()
     }
-
+    console.log("reached")
     if (existingWallet.tokenArray.some((t) => t.token === req.body.token)) {
-
+      console.log("reached 1")
       return { data: existingWallet, message: "Token already exists in the TokenArray" }
     } else {
-
+      console.log("reached 2")
       existingWallet.tokenArray.push({ token: req.body.token });
       existingWallet.save();
       return { data: existingWallet, message: "Token does not exist in the tokenArray, so add it." }
     }
   } else {
+    console.log("Reqche last")
 
     let referralCode = generateReferralCode()
     let referralLink = generateReferralLink(referralCode)
 
     const newWallet = new walletModel({
-      account: req.body.account,
+      account: account,
       tokenArray: [{ token: req.body.token }],
       referralCode: referralCode,
       referralLink: referralLink
     });
-    newWallet.save();
-    if (req.body.type === "New") {
-      console.log("constant.freeUSBLimit", constant.constant.freeUSBLimit, constant.constant.network.Arbitrium)
-      await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.Arbitrium)
-      //await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.XDC)
+    await newWallet.save();
 
-      // send some testing coin
-    }
+    await coinMint(req.body.account, constant.constant.freeUSBLimit, constant.constant.network.Arbitrium, req.body.deviceId)
+
     return { data: newWallet, message: "Wallet document with the given account does not exist, so create it." }
   }
 };
@@ -132,9 +133,6 @@ addWallet = async (req) => {
  * @returns {Object} The transaction hash of the transfer.
  */
 transferTokens = async (req) => {
-
-
-
 
   let networkInfo = NETWORKS[req.body.network]
   let web3Instance = getWebInstance(req.body.network)
@@ -150,6 +148,7 @@ transferTokens = async (req) => {
     "network"
   ]);
 
+  console.log("Bofuf", req.body)
 
 
   if (!isValidEthereumAddress(body.toAddress))
@@ -193,9 +192,10 @@ transferTokens = async (req) => {
   const hash = await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
 
   // Send notification to the recipient
-  let token = await walletModel.findOne({ account: body.toAddress });
+  let token = await walletModel.findOne({ account: body.toAddress.toLowerCase() });
 
   if (token) {
+    console.log("9nsis")
     let receiveTokenArray = token.tokenArray;
     for (var i = 0; i < receiveTokenArray.length; i++) {
       if (receiveTokenArray[i].token)
@@ -210,6 +210,7 @@ transferTokens = async (req) => {
   }
 
   let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
+  console.log("event controller", hash.transactionHash, transactionFound)
 
   if (transactionFound) {
     // Update transactionNotes if it's not already set or needs to be updated
@@ -218,16 +219,17 @@ transferTokens = async (req) => {
         { _id: transactionFound._id },
         { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL } }
       );
+      console.log("transa saved")
     }
   }
   else {
-    console.log("inside")
+    console.log("inside", hash.transactionHash)
     await transactionModel.updateOne(
       { transactionHash: hash.transactionHash }, // Unique identifier
       {
         $setOnInsert: { // These fields only get set if the document is newly inserted
-          senderAddress: body.senderAddress,
-          receiverAddress: body.toAddress,
+          senderAddress: body.senderAddress.toLowerCase(),
+          receiverAddress: body.toAddress.toLowerCase(),
           amountToSend: body.amount / TOKEN_DECIMAL,
           sendDate: new Date(),
           transactionHash: hash.transactionHash,
@@ -237,6 +239,7 @@ transferTokens = async (req) => {
       },
       { upsert: true } // If transaction doesn't exist, insert it
     );
+    console.log("transa saved 1")
   }
   await awardPoint(body.senderAddress)
   return { txnHash: hash };
@@ -249,13 +252,14 @@ transferTokens = async (req) => {
  */
 transactionsList = async (req) => {
   const { walletAddress, network } = req.body;
+  console.log("walletAddress", walletAddress)
 
   let wallet = await transactionModel.find({
     $and: [
       {
         $or: [
-          { senderAddress: walletAddress },
-          { receiverAddress: walletAddress },
+          { senderAddress: walletAddress.toLowerCase() },
+          { receiverAddress: walletAddress.toLowerCase() },
         ],
       },
       {
@@ -269,6 +273,7 @@ transactionsList = async (req) => {
     ],
   }).sort({ "timestamps.created_At": -1 });
 
+  console.log("wallet", wallet)
   return { wallet };
 };
 
@@ -279,14 +284,15 @@ transactionsList = async (req) => {
  */
 transactionsListWithLimit = async (req) => {
   const { walletAddress, network } = req.body;
+  console.log(walletAddress, network)
 
   let wallet = await transactionModel
     .find({
       $and: [
         {
           $or: [
-            { senderAddress: walletAddress },
-            { receiverAddress: walletAddress },
+            { senderAddress: walletAddress.toLowerCase() },
+            { receiverAddress: walletAddress.toLowerCase() },
           ],
         },
         {
@@ -312,13 +318,13 @@ transactionsListWithLimit = async (req) => {
 updateTransactionStatus = async (req) => {
 
   const { walletAddress, transactionHash, status } = req.body;
-  console.log("ccccc", walletAddress, transactionHash, status)
+
   let wallet = await transactionModel.findOne({
     $and: [
       {
         $or: [
-          { senderAddress: walletAddress },
-          { receiverAddress: walletAddress },
+          { senderAddress: walletAddress.toLowerCase() },
+          { receiverAddress: walletAddress.toLowerCase() },
         ],
       },
       {
@@ -331,14 +337,14 @@ updateTransactionStatus = async (req) => {
       { transactionHash: transactionHash },
     ],
   });
-  console.log("wallet", wallet)
+
 
 
   if (!wallet) throw new apiError(errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash));
   if (wallet.transactionStatus === "Success") return;
 
   if (status === 1) {
-    console.log("Found")
+
     wallet.transactionStatus = "Success";
   } else if (status === 0) {
     wallet.transactionStatus = "Fail";
@@ -350,7 +356,6 @@ updateTransactionStatus = async (req) => {
 
 
 mintCoin = async (req) => {
-  console.log("i am hit")
 
   let networkInfo = NETWORKS[constant.constant.network.Arbitrium]
   let web3Instance = getWebInstance(constant.constant.network.Arbitrium)
@@ -359,10 +364,6 @@ mintCoin = async (req) => {
   const gasPrice = (await getGasPrice(web3Instance)) * 2;
   const nonce = await getNonce(networkInfo.fundingAddress, web3Instance);
   const contract = new web3Instance.eth.Contract(ABI, networkInfo.contractAddress);
-
-
-  console.log("dccc", parseFloat(req.body.amount * TOKEN_DECIMAL), req.body, TOKEN_DECIMAL)
-
 
   let mintObject = await contract.methods.mint(
     req.body.walletAddress,
@@ -397,7 +398,7 @@ mintCoin = async (req) => {
   await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
 
   const updatedWallet = await walletModel.findOneAndUpdate(
-    { account: req.body.walletAddress, "badges.title": req.body.badgeTitle },
+    { account: req.body.walletAddress.toLowerCase(), "badges.title": req.body.badgeTitle },
     { $set: { "badges.$.rewardSent": true } }, // Update only the matching badge
     { new: true } // Return updated document
   );
@@ -436,14 +437,12 @@ getFreeCoin = async (req) => {
   const nonce = await getNonce(FUNDING_ADDRESS);
   const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
 
-  console.log("send amount", req.body.walletAddress, parseInt(req.body.amount * TOKEN_DECIMAL))
-
   let tx1 = await contract.methods.mint(
     req.body.walletAddress,
     parseInt(req.body.amount * TOKEN_DECIMAL)
   );
   const encodedTx = tx1.encodeABI();
-  console.log("encodedTx", encodedTx)
+
   // Construct transaction object
   let estimateTransactionObject = {
     nonce: global.web3.utils.toHex(nonce),
@@ -478,7 +477,6 @@ getFreeCoin = async (req) => {
 
 
 withdrawToken = async (req) => {
-  console.log("ccccc", req.body)
 
   let networkInfo = NETWORKS[req.body.network]
   let web3Instance = getWebInstance(req.body.network)
@@ -518,12 +516,12 @@ withdrawToken = async (req) => {
 
   const data = await signAndSendTransactionOnPurchase(transactionObject, networkInfo.fundingKey, web3Instance);
   await stakeModel.updateMany(
-    { wallet: req.body.walletAddress, network: networkInfo.name }, // Filter by wallet address and network name
+    { wallet: req.body.walletAddress.toLowerCase(), network: networkInfo.name }, // Filter by wallet address and network name
     { $set: { rewardAmountOnStaking: 0 } } // Reset the reward amount on staking to zero
   );
   let transaction = {
     senderAddress: networkInfo.fundingAddress,
-    receiverAddress: req.body.walletAddress,
+    receiverAddress: req.body.walletAddress.toLowerCase(),
     amountToSend: req.body.amount,
     transactionHash: data.hash.transactionHash,
     sendDate: new Date(),
@@ -550,7 +548,7 @@ withdrawToken = async (req) => {
 
 const transactionCount = async (req) => {
   const { walletAddress, network } = req.body;
-  let wallet = await walletModel.findOne({ account: walletAddress })
+  let wallet = await walletModel.findOne({ account: walletAddress.toLowerCase() })
   let allBadges = []
   if (wallet.badges.length > 0) {
 

@@ -1,12 +1,33 @@
 const { ABI, NETWORKS, TOKEN_DECIMAL } = require("../config")
 const constant = require("../constants/constant")
 const transactionModel = require("../models/transactionModel")
+const walletModel = require("../models/walletModel")
+const deviceRewardModel = require("../models/deviceRewardModel")
 const { getWebInstance } = require("../utils/utils")
 const { getGasPrice, getNonce, signAndSendTransaction } = require("../utils/wallet")
 
-const coinMint = async (walletAddress, amount, network) => {
+const coinMint = async (walletAddress, amount, network, deviceId) => {
 
     try {
+        console.log("walletAddress", walletAddress, amount, network, deviceId)
+        let wallet = await walletModel.findOne({ account: walletAddress.toLowerCase() })
+        console.log("wallet", wallet)
+        if (!wallet) return
+        if (wallet.intialCoinTransfer) {
+            console.log("Already transfer to this wallet")
+            return
+        }
+        if (!deviceId) {
+            console.log("no device id found")
+            return
+        }
+        let deviceExist = await deviceRewardModel.findOne({ deviceId: deviceId })
+        if (deviceExist) {
+            console.log("Already taken reward from this device")
+            return
+        }
+
+        console.log("nextt",)
         //Arbitrium
         let networkInfo = NETWORKS[network]
         let web3Instance = getWebInstance(network)
@@ -40,31 +61,20 @@ const coinMint = async (walletAddress, amount, network) => {
 
 
         await signAndSendTransaction(transactionObject, networkInfo.fundingKey, web3Instance);
-     
-        // let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
-        // console.log("transactionFound", transactionFound)
-        // let newTransaction
-        // if (transactionFound) {
-        //     console.log("insidebvbcb")
-        //     newTransaction = await transactionModel.updateOne(
-        //         { _id: transactionFound._id }, // Filter by wallet address and network name
-        //         { $set: { transactionType: "Free Mint", amountToSend: constant.constant.freeUSBLimit, senderAddress: networkInfo.fundingAddress } } // Reset the reward amount on staking to zero
-        //     );
-        // }
-        // else {
 
-        //     let transaction = {
-        //         senderAddress: constant.constant.contractInternalTransactionAddress,
-        //         receiverAddress: walletAddress,
-        //         amountToSend: constant.constant.freeUSBLimit,
-        //         transactionHash: hash.transactionHash,
-        //         sendDate: new Date(),
-        //         network: network,
-        //         transactionType: "Free Mint"
-        //     };
-        //     const newTransaction = new transactionModel(transaction);
-        //     await newTransaction.save();
-        // }
+        await walletModel.updateOne(
+            { account: walletAddress.toLowerCase() }, // Filter by wallet address and network name
+            { $set: { intialCoinTransfer: true } } // Reset the reward amount on staking to zero
+        );
+        await deviceRewardModel.create({
+            deviceId: deviceId,
+            isRewardClaim: true
+        });
+
+
+
+
+
         return
     }
     catch (e) {

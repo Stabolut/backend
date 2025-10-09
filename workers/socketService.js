@@ -38,7 +38,7 @@ module.exports = (server) => {
 
       // Find the user with the receiverAddress in usersArray
       let user = getUser(data.receiverAddress);
-      console.log("User found",user)
+    
       if (user) {
         // If the user is found, emit a getTransaction event to the corresponding client
         io.to(user.socketId).emit("getTransaction", {

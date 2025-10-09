@@ -18,9 +18,9 @@ const constant = {
     Pending: "Pending",
     Success: "Success"
   },
-  freeUSBLimit: 50,
+  freeUSBLimit: 5,
   contractInternalTransactionAddress: "0x0000000000000000000000000000000000000000",
-  referralRewardAmount: 20,
+  referralRewardAmount: 5,
   network: {
     XDC: "XDC",
     Arbitrium: "Arbitrium"

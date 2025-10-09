@@ -26,6 +26,11 @@ const walletSchema = new Schema({
     default: 0
 
   },
+  intialCoinTransfer: {
+    type: Boolean,
+    default: false
+
+  },
   referralCode: {
     type: String,
   },

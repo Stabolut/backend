@@ -22,27 +22,27 @@ const arbitriumTransactionListener = () => {
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
-     
+
       // Handling errors
       if (error) {
         console.error(error);
         return;
       }
+      console.log("Event1", event.transactionHash)
 
       // Initializing transaction type
       let transactionTransferType = "Transfer";
       let transaction;
-      console.log("event?.returnValues?.value", event?.returnValues?.value)
+      // console.log("event?.returnValues?.value", event)
 
       // Finding existing transaction in the database
       let findTransaction = await transactionModel.findOne({
-        senderAddress: { $regex: new RegExp(`^${event?.returnValues?.from}$`, 'i') },
-        receiverAddress: { $regex: new RegExp(`^${event?.returnValues?.to}$`, 'i') },
-        amountToSend: parseFloat(event?.returnValues?.value) / TOKEN_DECIMAL,
+        // senderAddress: { $regex: new RegExp(`^${event?.returnValues?.from}$`, 'i') },
+        // receiverAddress: { $regex: new RegExp(`^${event?.returnValues?.to}$`, 'i') },
         transactionHash: event.transactionHash,
       });
 
-
+      console.log("Event1 hash", findTransaction)
       // Creating transaction object if not found in database
       if (!findTransaction) {
         // Checking if transaction is a fee transaction
@@ -77,7 +77,7 @@ const arbitriumTransactionListener = () => {
         //Saving the new transaction to the database
         const newTransaction = new transactionModel(transaction);
         await newTransaction.save();
-        console.log("Transaction saved in script");
+        console.log("Transaction saved in script", transaction);
       }
 
     });

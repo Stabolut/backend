@@ -21,6 +21,7 @@ const XDCTransactionListener = () => {
 
     // Listening for Transfer events emitted by the contract
     contract.events.Transfer({ fromBlock: "latest" }, async (error, event) => {
+      console.log("i s i am happe")
 
       // Handling errors
       if (error) {

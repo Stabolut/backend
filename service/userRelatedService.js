@@ -88,9 +88,10 @@ const addContactList = async (req, res) => {
 
   if (accountExist) {
     throw new apiError(
-      `Contact already exists with this address: ${req.body.receiverAccount}`,
+      `A contact with the address ${req.body.receiverAccount} already exists (Name: ${accountExist.name}).`,
       404
     );
+    
   }
 
   // Check if the contact already exists

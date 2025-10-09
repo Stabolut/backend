@@ -103,7 +103,7 @@ connectToMongo();
 // Connect to Web3 blockchain
 newWeb3Connection();
 app.get(constant.api.prefix, (req, res) => {
-  res.send("Node version 8 is running wit new backend");
+  res.send("Node version 9 is running wit new update on react-native side");
 });
 
 // Define API routes
@@ -119,7 +119,7 @@ socketIO(httpServer);
 
 // Run scripts for various services
 arbitriumTransactionListener();
-XDCTransactionListener();
+// XDCTransactionListener();
 sendReferralTokenService();
 stakingRewardCalculations()
 APRRateService();
@@ -127,8 +127,7 @@ USDTConversionService();
 ethToUsbTokenExchangeService();
 btcToUsbTokenExchangeService();
 AirdropService()
-// automatedWalletStakingService();
-// stakingRewardService();
+
 
 // Start listening on the specified port
 httpServer.listen(PORT || 8003, () => {

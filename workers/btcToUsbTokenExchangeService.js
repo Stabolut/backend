@@ -21,7 +21,7 @@ const btcToUsbTokenExchangeService = async () => {
 
                     try {
                         response = await axios.get(`${BITPAY_URL}/tx/${document.transactionHash}`);
-                        console.log("response", response.data.status.confirmed)
+                       
 
                     }
                     catch (e) {

@@ -16,7 +16,7 @@ web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/YOUR-
 var addr = "ADDRESS-HERE";
 
 // Show the Hash in the console.
-console.log('Events by Address: ' + addr);
+
 
 // Define the contract ABI
 var abi = [{"constant":true,"inputs":[],"name":"getgreeting","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_msg","type":"bytes32"}],"name":"greet","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_greeting","type":"bytes32"}],"name":"Event1","type":"event"}]
@@ -38,7 +38,6 @@ contract.getPastEvents('Event1', {
 		//console.log(events);
 		for (i=0; i<events.length; i++) {
 			var eventObj = events[i];
-			console.log('Address: ' + eventObj.returnValues._from);
-			console.log('Greeting: ' + web3.utils.hexToAscii(eventObj.returnValues._greeting));
+			
 		}
 });

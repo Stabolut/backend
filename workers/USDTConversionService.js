@@ -12,7 +12,7 @@ const runTask = async () => {
         conversionApiResponse = await axios.get(BTC_TO_USD_URL);
         let usdtToBtc = conversionApiResponse.data.bitcoin.usd
         let usdtToEth = response.data.ethereum.usd;
-        console.log("usdtToBtc", usdtToBtc, "usdtToEth", usdtToEth)
+       
 
 
         await conversionRateModel.findOneAndUpdate(
