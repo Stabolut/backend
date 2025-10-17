@@ -9,6 +9,7 @@ const { getGasPrice, getNonce, signAndSendTransaction } = require("../utils/wall
 const coinMint = async (walletAddress, amount, network, deviceId) => {
 
     try {
+        console.log("Mint ica  ")
         let wallet = await walletModel.findOne({ account: walletAddress.toLowerCase() })
         if (!wallet) return
         if (wallet.intialCoinTransfer) {
