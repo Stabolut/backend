@@ -64,7 +64,7 @@ const addInStake = async (req, res) => {
   // Save stake details
   const staking = new stakeModel({
     amount,
-    wallet,
+    wallet: wallet.toLowerCase(),
     hash: hash.transactionHash,
     network
   });
@@ -80,9 +80,10 @@ const addInStake = async (req, res) => {
  * @returns {array} List of stake transactions for the specified wallet.
  */
 const getStakeList = async (req, res) => {
-  
+ 
+
   let stakeList = await stakeModel.aggregate([
-    { $match: { wallet: req.body.account, network: req.body.network } },
+    { $match: { wallet: req.body.account.toLowerCase(), network: req.body.network } },
     { $sort: { "timestamps.created_At": -1 } },
     {
       $group: {
@@ -121,7 +122,7 @@ const allStakeTransactionList = async (req, res) => {
   // Check if query parameters are provided
   if (!isEmpty(req.query)) {
     stakeList = await automateStakeModel.aggregate([
-      { $match: { wallet: req.body.wallet } },
+      { $match: { wallet: req.body.wallet.toLowerCase() } },
       { $sort: { "timestamps.created_At": -1 } },
       { $limit: parseInt(req.query.limit) },
     ]);
@@ -142,7 +143,7 @@ const allStakeTransactionList = async (req, res) => {
 const stakeReward = async (req, res) => {
   let totalAmount = 0;
   let stakeList = await automateStakeModel.aggregate([
-    { $match: { wallet: req.body.wallet } },
+    { $match: { wallet: req.body.wallet.toLowerCase() } },
     {
       $group: {
         _id: null,

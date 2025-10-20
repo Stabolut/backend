@@ -82,7 +82,7 @@ const addContactList = async (req, res) => {
   // // Check if the contact already exists
   const accountExist = await contactListModel.findOne({
     receiver_account: { $regex: new RegExp(`^${req.body.receiverAccount}$`, 'i') },
-    sender_account:{ $regex: new RegExp(`^${req.body.senderAccount}$`, 'i') },
+    sender_account: { $regex: new RegExp(`^${req.body.senderAccount}$`, 'i') },
   });
 
 
@@ -91,7 +91,7 @@ const addContactList = async (req, res) => {
       `A contact with the address ${req.body.receiverAccount} already exists (Name: ${accountExist.name}).`,
       404
     );
-    
+
   }
 
   // Check if the contact already exists
@@ -110,8 +110,8 @@ const addContactList = async (req, res) => {
 
   // Create and save the new contact
   const newContact = new contactListModel({
-    receiver_account: req.body.receiverAccount,
-    sender_account: req.body.senderAccount,
+    receiver_account: req.body.receiverAccount.toLowerCase(),
+    sender_account: req.body.senderAccount.toLowerCase(),
     name: req.body.name.toLowerCase(),
   });
   await newContact.save();
@@ -127,7 +127,7 @@ const addContactList = async (req, res) => {
 const getContactListInfo = async (req, res) => {
 
   const contactList = await contactListModel.find({
-    sender_account: req.body.account,
+    sender_account: req.body.account.toLowerCase(),
   }).sort({ "timestamps.created_At": -1 });
   return contactList;
 };

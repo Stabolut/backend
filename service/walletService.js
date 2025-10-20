@@ -41,12 +41,11 @@ createUserWallet = async () => {
  */
 addWallet = async (req) => {
   let account = req.body.account.toLowerCase();
-
   let existingWallet = await walletModel.findOne({
     account: account,
   });
 
-if (!isEmpty(req.body.referenceCode)) {
+  if (!isEmpty(req.body.referenceCode)) {
 
     let referralUser = await walletModel.findOne({
       referralCode: { $regex: new RegExp(`^${req.body.referenceCode}$`, 'i') },
@@ -309,9 +308,9 @@ transactionsListWithLimit = async (req) => {
 updateTransactionStatus = async (req) => {
 
   const { walletAddress, transactionHash, status } = req.body;
-  console.log("walletAddress, transactionHash, status",walletAddress, transactionHash, status,"0x60873ff01781979d0b7073c6f471255c17c881f86ad9b54b354567dde27b97ee")
-  let v= await transactionModel.findOne({transactionHash: transactionHash})
-  console.log("dddd",v)
+  console.log("walletAddress, transactionHash, status", walletAddress, transactionHash, status, "0x60873ff01781979d0b7073c6f471255c17c881f86ad9b54b354567dde27b97ee")
+  let v = await transactionModel.findOne({ transactionHash: transactionHash })
+  // console.log("dddd", v)
 
   let wallet = await transactionModel.findOne({
     $and: [
@@ -331,19 +330,20 @@ updateTransactionStatus = async (req) => {
       { transactionHash: transactionHash },
     ],
   });
-console.log("wallet",wallet)
+  console.log("wallet", wallet)
 
 
   if (!wallet) throw new apiError(errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash));
   if (wallet.transactionStatus === "Success") return;
 
   if (status === 1) {
+    console.log("Inside thisss")
 
     wallet.transactionStatus = "Success";
   } else if (status === 0) {
     wallet.transactionStatus = "Fail";
   }
-  wallet.save();
+  await wallet.save();
   return;
 };
 
