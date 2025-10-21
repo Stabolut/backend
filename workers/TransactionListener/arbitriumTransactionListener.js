@@ -28,7 +28,7 @@ const arbitriumTransactionListener = () => {
         console.error(error);
         return;
       }
-      console.log("Event1", event.transactionHash)
+     // console.log("Event1", event.transactionHash)
 
       // Initializing transaction type
       let transactionTransferType = "Transfer";
@@ -42,7 +42,7 @@ const arbitriumTransactionListener = () => {
         transactionHash: event.transactionHash,
       });
 
-      console.log("Event1 hash", findTransaction)
+     // console.log("Event1 hash", findTransaction)
       // Creating transaction object if not found in database
       if (!findTransaction) {
         // Checking if transaction is a fee transaction

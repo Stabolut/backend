@@ -40,6 +40,7 @@ createUserWallet = async () => {
  * @returns {string} A message indicating the success or failure of the operation.
  */
 addWallet = async (req) => {
+
   let account = req.body.account.toLowerCase();
   let existingWallet = await walletModel.findOne({
     account: account,
@@ -138,7 +139,7 @@ transferTokens = async (req) => {
     "network"
   ]);
 
-  console.log("Bofuf", req.body)
+
 
 
   if (!isValidEthereumAddress(body.toAddress))
@@ -185,7 +186,6 @@ transferTokens = async (req) => {
   let token = await walletModel.findOne({ account: body.toAddress.toLowerCase() });
 
   if (token) {
-    console.log("9nsis")
     let receiveTokenArray = token.tokenArray;
     for (var i = 0; i < receiveTokenArray.length; i++) {
       if (receiveTokenArray[i].token)
@@ -200,7 +200,7 @@ transferTokens = async (req) => {
   }
 
   let transactionFound = await transactionModel.findOne({ transactionHash: hash.transactionHash })
-  console.log("event controller", hash.transactionHash, transactionFound)
+  // console.log("event controller", hash.transactionHash, transactionFound)
 
   if (transactionFound) {
     // Update transactionNotes if it's not already set or needs to be updated
@@ -209,11 +209,10 @@ transferTokens = async (req) => {
         { _id: transactionFound._id },
         { $set: { transactionNotes: body.transNotes, amountToSend: body.amount / TOKEN_DECIMAL } }
       );
-      console.log("transa saved")
     }
   }
   else {
-    console.log("inside", hash.transactionHash)
+    // console.log("inside", hash.transactionHash)
     await transactionModel.updateOne(
       { transactionHash: hash.transactionHash }, // Unique identifier
       {
@@ -229,7 +228,7 @@ transferTokens = async (req) => {
       },
       { upsert: true } // If transaction doesn't exist, insert it
     );
-    console.log("transa saved 1")
+   // console.log("transa saved 1")
   }
   await awardPoint(body.senderAddress)
   return { txnHash: hash };
@@ -242,7 +241,7 @@ transferTokens = async (req) => {
  */
 transactionsList = async (req) => {
   const { walletAddress, network } = req.body;
-  console.log("walletAddress", walletAddress)
+  //console.log("walletAddress", walletAddress)
 
   let wallet = await transactionModel.find({
     $and: [
@@ -263,7 +262,7 @@ transactionsList = async (req) => {
     ],
   }).sort({ "timestamps.created_At": -1 });
 
-  console.log("wallet", wallet)
+  // console.log("wallet", wallet)
   return { wallet };
 };
 
@@ -274,7 +273,7 @@ transactionsList = async (req) => {
  */
 transactionsListWithLimit = async (req) => {
   const { walletAddress, network } = req.body;
-  console.log(walletAddress, network)
+  // console.log(walletAddress, network)
 
   let wallet = await transactionModel
     .find({
@@ -308,7 +307,7 @@ transactionsListWithLimit = async (req) => {
 updateTransactionStatus = async (req) => {
 
   const { walletAddress, transactionHash, status } = req.body;
-  console.log("walletAddress, transactionHash, status", walletAddress, transactionHash, status, "0x60873ff01781979d0b7073c6f471255c17c881f86ad9b54b354567dde27b97ee")
+  //console.log("walletAddress, transactionHash, status", walletAddress, transactionHash, status, "0x60873ff01781979d0b7073c6f471255c17c881f86ad9b54b354567dde27b97ee")
   let v = await transactionModel.findOne({ transactionHash: transactionHash })
   // console.log("dddd", v)
 
@@ -330,14 +329,14 @@ updateTransactionStatus = async (req) => {
       { transactionHash: transactionHash },
     ],
   });
-  console.log("wallet", wallet)
+  // console.log("wallet", wallet)
 
 
   if (!wallet) throw new apiError(errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash));
   if (wallet.transactionStatus === "Success") return;
 
   if (status === 1) {
-    console.log("Inside thisss")
+    // console.log("Inside thisss")
 
     wallet.transactionStatus = "Success";
   } else if (status === 0) {
@@ -550,7 +549,7 @@ const transactionCount = async (req) => {
       acc[badge.title] = badge.rewardSent; // Store rewardSent status for each earned badge
       return acc;
     }, {});
-    console.log("earnedBadges1", earnedBadges, earnedBadges.hasOwnProperty('First Transfer'),)
+   // console.log("earnedBadges1", earnedBadges, earnedBadges.hasOwnProperty('First Transfer'),)
 
     allBadges = [
       {

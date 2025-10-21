@@ -71,7 +71,7 @@ const runTask = async () => {
             }
           );
         } catch (e) {
-          console.log("catch reward service", e);
+         // console.log("catch reward service", e);
           try {
             await automateStakeModel.updateOne(
               { _id: stakeRewardList[i]._id },

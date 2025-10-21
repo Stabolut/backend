@@ -11,16 +11,20 @@ module.exports = (server) => {
 
   // Function to get user information by userId
   const getUser = (userId) => {
-    return usersArray.find((user) => user.userId === userId);
+    console.log("userId", userId?.toLowerCase(), usersArray)
+    return usersArray.find((user) => user?.userId?.toLowerCase() === userId?.toLowerCase());
   };
 
   // Function to add a user to the usersArray or update its socketId if already exists
   const addUser = (userId, socketId) => {
+    console.log("useridddd", userId, socketId)
 
     // Remove any existing user entry with the same userId
-    usersArray = usersArray.filter((item) => item.userId !== userId);
+    usersArray = usersArray.filter((item) => item?.userId?.toLowerCase() !== userId?.toLowerCase());
+   
     // Add the new user entry
     usersArray.push({ userId, socketId });
+    console.log("usersArray", usersArray)
   };
 
   // Event listener for incoming socket connections
@@ -28,17 +32,19 @@ module.exports = (server) => {
     console.log("Client connected")
     // Event listener to handle addUser event, which occurs when a new user connects
     socket.on("addUser", (userAddress) => {
+      console.log("Should i caa", socket.id, userAddress)
       // Add the user to the usersArray with its socketId
       addUser(userAddress.address, socket.id);
     });
 
     // Event listener to handle transferEvent, which is emitted when a transfer occurs
     socket.on("transferEvent", (data) => {
-      console.log("Tranafer event happen")
+      console.log("Tranafer event happen",data)
 
       // Find the user with the receiverAddress in usersArray
       let user = getUser(data.receiverAddress);
-    
+      console.log("user", user)
+
       if (user) {
         // If the user is found, emit a getTransaction event to the corresponding client
         io.to(user.socketId).emit("getTransaction", {
