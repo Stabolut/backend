@@ -1,7 +1,7 @@
 // Import necessary modules and models
 const { errorMessages } = require("../constants/errors");
 const walletModel = require("../models/walletModel");
-const { getTokenBalance } = require("../utils/wallet");
+const { getTokenBalance, getTransactionReceipts } = require("../utils/wallet");
 const transactionModel = require("../models/transactionModel");
 const referralModel = require("../models/referralModel")
 const { isEmpty } = require("lodash")
@@ -32,6 +32,24 @@ const { awardPoint } = require("../utils/gamification");
 createUserWallet = async () => {
   const wallet = await createWallet();
   return wallet;
+};
+
+getWalletBalance = async (req) => {
+  console.log("req.queryr", req.query.address)
+  let networkInfo = NETWORKS[constant.constant.network.Arbitrium]
+  let web3Instance = getWebInstance(constant.constant.network.Arbitrium)
+  console.log("networkInfo", networkInfo)
+
+  let balance = await getTokenBalance(req.query.address, networkInfo.contractAddress, web3Instance);
+
+  return balance / 1e2
+};
+getTransactionReceipt = async (req) => {
+
+  let web3Instance = getWebInstance(constant.constant.network.Arbitrium)
+  let receipt = await getTransactionReceipts(req.query.hash, web3Instance);
+
+  return receipt
 };
 
 /**
@@ -228,7 +246,7 @@ transferTokens = async (req) => {
       },
       { upsert: true } // If transaction doesn't exist, insert it
     );
-   // console.log("transa saved 1")
+    // console.log("transa saved 1")
   }
   await awardPoint(body.senderAddress)
   return { txnHash: hash };
@@ -255,7 +273,7 @@ transactionsList = async (req) => {
         $or: [
           { transactionType: "Transfer" },
           { transactionType: "Staking" },
-          { transactionType: "Free Mint" }
+          { transactionType: "Free Mint" },
         ],
       },
       { network: network },
@@ -309,7 +327,7 @@ updateTransactionStatus = async (req) => {
   const { walletAddress, transactionHash, status } = req.body;
   //console.log("walletAddress, transactionHash, status", walletAddress, transactionHash, status, "0x60873ff01781979d0b7073c6f471255c17c881f86ad9b54b354567dde27b97ee")
   let v = await transactionModel.findOne({ transactionHash: transactionHash })
-  // console.log("dddd", v)
+  console.log("dddd", v)
 
   let wallet = await transactionModel.findOne({
     $and: [
@@ -324,9 +342,10 @@ updateTransactionStatus = async (req) => {
           { transactionType: "Transfer" },
           { transactionType: "Staking" },
           { transactionType: "Free Mint" },
+          { transactionType: "Fee" },
         ],
       },
-      { transactionHash: transactionHash },
+      { transactionHash: { $regex: new RegExp(`^${transactionHash}$`, "i") } },
     ],
   });
   // console.log("wallet", wallet)
@@ -335,11 +354,11 @@ updateTransactionStatus = async (req) => {
   if (!wallet) throw new apiError(errorMessages.GENERIC_ERROR.RECORD_NOT_FOUND(transactionHash));
   if (wallet.transactionStatus === "Success") return;
 
-  if (status === 1) {
+  if (status === 1 || status === true) {
     // console.log("Inside thisss")
 
     wallet.transactionStatus = "Success";
-  } else if (status === 0) {
+  } else if (status === 0 || status === false) {
     wallet.transactionStatus = "Fail";
   }
   await wallet.save();
@@ -549,7 +568,7 @@ const transactionCount = async (req) => {
       acc[badge.title] = badge.rewardSent; // Store rewardSent status for each earned badge
       return acc;
     }, {});
-   // console.log("earnedBadges1", earnedBadges, earnedBadges.hasOwnProperty('First Transfer'),)
+    // console.log("earnedBadges1", earnedBadges, earnedBadges.hasOwnProperty('First Transfer'),)
 
     allBadges = [
       {
@@ -738,7 +757,19 @@ const transactionCount = async (req) => {
   return { allBadges };
 };
 
-
+const getWalletConfig = async (req) => {
+  let networkInfo = NETWORKS[constant.constant.network.Arbitrium]
+  console.log("networkInfo", networkInfo)
+  let config = {
+    name: "Arbitrium",
+    contractAddress: networkInfo.contractAddress,
+    rpcUrl: networkInfo.rpcUri,
+    explorerURL: "https://arbiscan.io/tx",
+    icon: "arbitriumLogo",
+    fundindAddress: networkInfo.fundingAddress,
+  }
+  return config
+}
 
 // Export the controller functions
 module.exports = {
@@ -751,5 +782,8 @@ module.exports = {
   mintCoin,
   getFreeCoin,
   withdrawToken,
-  transactionCount
+  transactionCount,
+  getWalletBalance,
+  getTransactionReceipt,
+  getWalletConfig
 };

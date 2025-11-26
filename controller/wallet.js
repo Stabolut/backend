@@ -153,6 +153,45 @@ transactionCount = async (req, res) => {
 };
 
 
+getWalletBalance = async (req, res) => {
+  // Call the getUserByWallet function from the walletService module and await its response
+  let data = await wallet.getWalletBalance(req);
+
+  // Send a success response with the message indicating successful retrieval of user by wallet
+  return sendSuccessResponse(
+    res,
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Wallet balance"),
+    200,
+    data,
+  );
+};
+
+
+getTransactionReceipt = async (req, res) => {
+  // Call the getUserByWallet function from the walletService module and await its response
+  let data = await wallet.getTransactionReceipt(req);
+
+  // Send a success response with the message indicating successful retrieval of user by wallet
+  return sendSuccessResponse(
+    res,
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction receipt"),
+    200,
+    data,
+  );
+};
+
+getWalletConfig = async (req, res) => {
+  // Call the getUserByWallet function from the walletService module and await its response
+  let data = await wallet.getWalletConfig(req);
+
+  // Send a success response with the message indicating successful retrieval of user by wallet
+  return sendSuccessResponse(
+    res,
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Wallet config"),
+    200,
+    data,
+  );
+};
 // Exporting the functions so they can be used elsewhere
 module.exports = {
   createWallet,
@@ -165,5 +204,8 @@ module.exports = {
   mintCoin,
   getFreeCoin,
   withdrawToken,
-  transactionCount
+  transactionCount,
+  getWalletBalance,
+  getTransactionReceipt,
+  getWalletConfig
 };

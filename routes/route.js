@@ -13,6 +13,10 @@ module.exports = {
   UPDATE_TRANSACTION_STATUS: "/update-transaction-status",
   MINT_COIN:"/mint-coin",
   GET_FREE_COIN:"/get-free-coin",
+  GET_WALLET_BALANCE:"/get-wallet-balance",
+  GET_TRANSACTION_RECEIPT:"/get-transaction-receipt",
+  GET_WALLET_CONFIG:"/get-wallet-config",
+
   //User Route
   RETRIEVE_USER_BY_WALLET_ADDRESS_OR_USERNAME:
     "/retrieve-user-by-wallet-or-username",

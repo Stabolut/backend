@@ -10,7 +10,9 @@ const {
   transactionsList,
   getFreeCoin,
   withdrawToken,
-  transactionCount
+  transactionCount,
+  getWalletBalance,
+  getTransactionReceipt
 } = require("../controller/wallet");
 
 const {
@@ -296,6 +298,19 @@ router.post(
   validateRequest,
   httpErrorHandler(getFreeCoin)
 );
+router.get(
+  route.GET_WALLET_BALANCE,
+  httpErrorHandler(getWalletBalance)
+);
+router.get(
+  route.GET_TRANSACTION_RECEIPT,
+  httpErrorHandler(getTransactionReceipt)
+);
+router.get(
+  route.GET_WALLET_CONFIG,
+  httpErrorHandler(getWalletConfig)
+);
+
 
 router.post(
   route.TRANSACTIONS_COUNT,
