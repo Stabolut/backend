@@ -196,9 +196,8 @@ const signAndSendTransactionOnPurchase = async (rawTx, privateKey, web3Instance)
 };
 
 const getTransactionReceipts = async (transactionHash, web3Instance) => {
-        console.log("transactionHash",transactionHash)
+
         const transaction = await web3Instance.eth.getTransactionReceipt(transactionHash);
-        console.log("transaction",transaction)
         return transaction;
 }
 

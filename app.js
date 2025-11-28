@@ -103,7 +103,7 @@ connectToMongo();
 // Connect to Web3 blockchain
 newWeb3Connection();
 app.get(constant.api.prefix, (req, res) => {
-  res.send("Node version 11 is running wit new update on react-native side");
+  res.send("Node version 13 is running wit new update on react-native side");
 });
 
 // Define API routes
