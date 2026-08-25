@@ -25,7 +25,7 @@ const stakeModel = require("../models/stakeModel");
  * Creates a new wallet for a user.
  * @returns {Object} The newly created wallet object.
  */
-createUserWallet = async () => {
+const createUserWallet = async () => {
   const wallet = await createWallet();
   return wallet;
 };
@@ -35,7 +35,7 @@ createUserWallet = async () => {
  * @param {Object} req - The request object containing account and token details.
  * @returns {string} A message indicating the success or failure of the operation.
  */
-addWallet = async (req) => {
+const addWallet = async (req) => {
 
   let existingWallet = await walletModel.findOne({
     account: req.body.account,
@@ -53,7 +53,7 @@ addWallet = async (req) => {
     );
     let referralExist = await referralModel.findOne({
       referenceWallet: { $regex: new RegExp(`^${referralUser.account}$`, 'i') },
-      refferalWallet: { $regex: new RegExp(`^${req.body.account}$`, 'i') },
+      referralWallet: { $regex: new RegExp(`^${req.body.account}$`, 'i') },
     });
     if (referralExist)
 
@@ -65,10 +65,10 @@ addWallet = async (req) => {
 
     const referral = new referralModel({
       referenceWallet: referralUser.account,
-      refferalWallet: req.body.account,
+      referralWallet: req.body.account,
 
     });
-    referral.save();
+    await referral.save();
   }
 
   if (existingWallet) {
@@ -89,7 +89,7 @@ addWallet = async (req) => {
     } else {
 
       existingWallet.tokenArray.push({ token: req.body.token });
-      existingWallet.save();
+      await existingWallet.save();
       return { data: existingWallet, message: "Token does not exist in the tokenArray, so add it." }
     }
   } else {
@@ -103,7 +103,7 @@ addWallet = async (req) => {
       referralCode: referralCode,
       referralLink: referralLink
     });
-    newWallet.save();
+    await newWallet.save();
     return { data: newWallet, message: "Wallet document with the given account does not exist, so create it." }
   }
 };
@@ -113,12 +113,7 @@ addWallet = async (req) => {
  * @param {Object} req - The request object containing transfer details.
  * @returns {Object} The transaction hash of the transfer.
  */
-transferTokens = async (req) => {
-
-  let r = await getTokenBalance("0x6983cB83052588AF94Cf9a937e664698e4E63490")
-  console.log("balance", r,address)
-
-  return
+const transferTokens = async (req) => {
   const body = _.pick(req.body, [
     "signature",
     "toAddress",
@@ -127,7 +122,7 @@ transferTokens = async (req) => {
     "senderAddress",
     "originalAmount",
     "transNotes",
-    "netowrk"
+    "network"
   ]);
 
   if (!isValidEthereumAddress(body.toAddress))
@@ -210,7 +205,7 @@ transferTokens = async (req) => {
       transactionHash: hash.transactionHash,
       sendDate: new Date(),
       transactionNotes: body.transNotes,
-      network: network
+      network: body.network || "Arbitrum"
     };
 
     const newTransaction = new transactionModel(transaction);
@@ -225,7 +220,7 @@ transferTokens = async (req) => {
  * @param {Object} req - The request object containing the wallet address.
  * @returns {Object} The list of transactions associated with the wallet.
  */
-transactionsList = async (req) => {
+const transactionsList = async (req) => {
   const { walletAddress } = req.body;
 
   let wallet = await transactionModel.find({
@@ -248,7 +243,7 @@ transactionsList = async (req) => {
  * @param {Object} req - The request object containing the wallet address.
  * @returns {Object} The limited list of transactions associated with the wallet.
  */
-transactionsListWithLimit = async (req) => {
+const transactionsListWithLimit = async (req) => {
   const { walletAddress } = req.body;
 
   let wallet = await transactionModel.find({
@@ -272,7 +267,7 @@ transactionsListWithLimit = async (req) => {
  * Updates the status of a transaction.
  * @param {Object} req - The request object containing wallet address, transaction hash, and status.
  */
-updateTransactionStatus = async (req) => {
+const updateTransactionStatus = async (req) => {
 
   const { walletAddress, transactionHash, status } = req.body;
   let wallet = await transactionModel.findOne({
@@ -295,18 +290,15 @@ updateTransactionStatus = async (req) => {
     );
 
   if (status === 1) {
-    console.log("Found")
     wallet.transactionStatus = "Success";
   } else if (status === 0) {
     wallet.transactionStatus = "Fail";
   }
-  wallet.save();
+  await wallet.save();
   return;
 };
 
-
-
-mintCoin = async (req) => {
+const mintCoin = async (req) => {
 
 
   let gasPrice = (await getGasPrice()) * 2;
@@ -347,7 +339,7 @@ mintCoin = async (req) => {
 
 
 
-getFreeCoin = async (req) => {
+const getFreeCoin = async (req) => {
 
   const { walletAddress, amount } = req.body;
 
@@ -410,7 +402,7 @@ getFreeCoin = async (req) => {
 
 
 }
-withdrawToken = async (req) => {
+const withdrawToken = async (req) => {
 
   let gasPrice = (await getGasPrice()) * 2;
   const nonce = await web3.eth.getTransactionCount(FUNDING_ADDRESS);

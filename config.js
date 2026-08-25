@@ -1,6 +1,15 @@
 const dotenv = require("dotenv");
-const environment = process.env.NODE_ENV || "production";
-if (environment !== "k8s") dotenv.config({ path: `${environment}.env` });
+const fs = require("fs");
+const path = require("path");
+
+const environment = process.env.NODE_ENV;
+if (environment && fs.existsSync(path.resolve(process.cwd(), `${environment}.env`))) {
+  dotenv.config({ path: path.resolve(process.cwd(), `${environment}.env`) });
+} else if (fs.existsSync(path.resolve(process.cwd(), ".env"))) {
+  dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+} else {
+  dotenv.config();
+}
 const isDevEnv = environment === "development";
 const RPC_URI = process.env.ARB_RPC_URI;
 const XDC_URI = process.env.XDC_RPC_URI;

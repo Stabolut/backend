@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: stabolut-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: .
+    container_name: stabolut-backend
+    restart: always
+    ports:
+      - "8003:8003"
+    environment:
+      - NODE_ENV=development
+      - PORT=8003
+      - MONGO_URL=mongodb://mongodb:27017/usb_wallet_db
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data:

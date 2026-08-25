@@ -1,150 +1,141 @@
-# Backend API for USB Token Management
+# Stabolut Backend API
 
-## Table of Contents
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
-- [Overview](#overview)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [API Endpoints](#api-endpoints)
-- [Usage](#usage)
-- [High-Level Process](#high-level-process)
-- [Contact](#contact-us)
+A scalable Node.js & Express backend providing gasless relayed transactions, user wallet management, staking services, real-time WebSocket events, and push notifications for the **Stabolut Ecosystem** (USB Token on Arbitrum & XDC).
 
-## Overview
+---
 
-The Wallet Service Backend serves as the foundational infrastructure for a mobile wallet application tailored to manage USB, a specific cryptocurrency ecosystem. Designed with scalability and security in mind, this backend system facilitates a wide range of essential functionalities, including user wallet creation, fund transfers, staking, gasless transactions, transaction management, and integration with various blockchain networks.
+## 📋 Table of Contents
+- [Architecture & Key Features](#-architecture--key-features)
+- [Prerequisites](#-prerequisites)
+- [Quick Start (Docker Compose)](#-quick-start-with-docker-compose-recommended)
+- [Manual Setup (Local Node.js)](#-manual-setup-without-docker)
+- [Environment Variables Guide](#-environment-variables-guide)
+- [Interactive API Documentation (Swagger)](#-interactive-api-documentation)
+- [Relaying Gasless Transactions](#-how-gasless-relaying-works)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-Built on the robust Node.js runtime environment, complemented by the Express framework for seamless API development, and MongoDB for efficient data storage, this backend solution ensures high performance and reliability. Additionally, Firebase integration enables real-time transaction notifications, enhancing user engagement and experience.
+---
 
-With the provided API endpoints, developers can effortlessly integrate their mobile wallet applications with the backend system, allowing users to securely manage their USB digital assets, conduct gasless transactions, and stay updated on their wallet activities. The backend's flexibility also extends to supporting multiple cryptocurrencies, enabling users to transact with various digital currencies seamlessly.
+## 🌟 Architecture & Key Features
 
-Overall, the Wallet Service Backend empowers developers to create feature-rich mobile wallet applications specifically tailored for USB, providing users with a convenient, secure, and efficient platform for managing their USB cryptocurrency assets.
+- **Gasless Relayed Transfers**: Submits user-signed EIP-712 / ERC-865 meta-transactions to the blockchain on behalf of mobile users with zero gas cost to the end user.
+- **Multi-Chain Support**: Arbitrum Sepolia (`421614`), Arbitrum One (`42161`), and XDC Apothem (`51`).
+- **Live WebSocket Feed**: Real-time push of transaction states to mobile and web clients via Socket.IO.
+- **Staking Services**: Automated staking reward distribution and yield tracking.
+- **Interactive Documentation**: Embedded Swagger UI at `/api-docs`.
 
-## Technologies Used
+---
 
-- **Backend Framework:** Node.js with Express
-- **Database:** MongoDB
-- **Notification:** Firebase (for transaction notifications)
-- **Live Updates:** Socket.io
+## 💻 Prerequisites
 
-## Installation
+- **Node.js**: `v18.x` or later ([Download](https://nodejs.org/))
+- **MongoDB**: A running MongoDB instance locally (`mongodb://localhost:27017`) or a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster.
+- **Docker & Docker Compose** *(Optional, recommended for 1-command startup)*
 
-To run the app locally, follow these steps:
+---
 
-1.  Clone the repository:
+## ⚡ Quick Start with Docker Compose (Recommended)
 
-    git clone https://github.com/Stabolut/backend.git
+The fastest way to get the backend and database running locally:
 
-2.  Navigate to the project directory:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Stabolut/backend.git
+   cd backend
+   ```
 
-    cd backend
+2. **Create your environment file:**
+   ```bash
+   cp .env.example .env
+   ```
 
-3.  Install dependencies:
+3. **Start the containers:**
+   ```bash
+   docker compose up --build
+   ```
 
-    npm install
+The backend will automatically connect to the containerized MongoDB instance and start on **`http://localhost:8003`**.
 
-4.  Install dependencies:
+---
 
-    npm run start
+## 🛠️ Manual Setup (Without Docker)
 
-## API Endpoints
-
-The backend provides the following API endpoints:
-
-- **Create Wallet**: Create a new wallet for a user.
-- **Transfer Funds**: Transfer funds between wallets.
-- **Get Wallet Balance**: Retrieve the balance of a wallet.
-- **Associate Wallet with User**: Associate a wallet with a user.
-- **Stake Amount**: Add an amount to stake.
-- **Stake Transaction**: Perform a stake transaction.
-- **Transaction List**: Retrieve a list of transactions for a wallet.
-- **Update Transaction Status**: Update the status of a transaction.
-- **Purchase Coin with BTC**: Purchase coins using Bitcoin.
-- **Purchase Coin with ETH**: Purchase coins using Ethereum.
-
-Refer to the API documentation for detailed information on each endpoint.
-
-## Usage
-
-To utilize the Wallet Service Backend:
-
-1. Ensure the backend server is running.
-2. Configure the mobile wallet app to communicate with the backend server using appropriate API endpoints and authentication tokens.
-3. Utilize the provided API endpoints to perform wallet-related operations such as creating wallets, transferring funds, and staking. For example:
-   - To create a new wallet for a user, use the **Create Wallet** API.
-   - To transfer funds between wallets, use the **Transfer Funds** API.
-   - To retrieve the balance of a wallet, use the **Get Wallet Balance** API.
-   - To associate a wallet with a user, use the **Associate Wallet with User** API.
-   - To add an amount to stake, use the **Stake Amount** API.
-   - To perform a stake transaction, use the **Stake Transaction** API.
-   - To retrieve a list of transactions for a wallet, use the **Transaction List** API.
-   - To update the status of a transaction, use the **Update Transaction Status** API.
-   - To purchase coins using Bitcoin, use the **Purchase Coin with BTC** API.
-   - To purchase coins using Ethereum, use the **Purchase Coin with ETH** API.
-4. Leverage Firebase for notifications and Socket.io for real-time transaction updates.
-
-## High-Level Process
-
-The Wallet Service Backend follows a structured process flow to facilitate the management of USB cryptocurrency assets within the mobile wallet application. The process can be summarized as follows:
-
-1. **Wallet Creation and Association**:
-
-   - **Wallet Creation**: Users can create their USB wallets through the backend system.
-   - **Wallet Association**: Each wallet is associated with a unique identifier and linked to the user's account. Optionally, users can link a username to their account, allowing others to transfer USB to their account using the username instead of the full address.
-
-2. **Transaction Initiation and Authorization**:
-
-   - Users initiate transactions such as fund transfers, stake additions, and coin purchases through the mobile wallet interface.
-   - These requests are securely transmitted to the backend system for authorization.
-   - Real-time updates and notifications are sent via Socket.io to users' mobile devices, providing instant alerts for transaction confirmations and other relevant events.
-
-3. **Transaction Processing**:
-
-   - The backend system processes authorized transactions, verifying account balances, executing fund transfers, updating stake amounts, and recording transaction details.
-
-4. **Blockchain Integration**:
-
-   - For transactions involving blockchain networks, the backend system interacts with the respective blockchain networks to broadcast transactions, monitor confirmations, and update transaction statuses.
-
-5. **Transaction History and Reporting**:
-
-   - Users can access their transaction history and generate reports detailing their USB cryptocurrency transactions, providing transparency and accountability for their financial activities.
-
-6. **Maintenance and Monitoring**:
-   - The backend system undergoes routine maintenance and monitoring to ensure optimal performance, reliability, and security of the platform, with updates and improvements implemented as necessary.
-
-## Contact Us
-
-If you have any questions, suggestions, or feedback, feel free to reach out to us. We're here to help!
-
-- Email: [press@stabolut.com](mailto:press@stabolut.com)
-
-## API Documentation
-
-The API documentation is available through Swagger UI. To access it:
-
-1. Start the server:
-
+### 1. Install Dependencies
 ```bash
-npm run start
+git clone https://github.com/Stabolut/backend.git
+cd backend
+npm install
 ```
 
-2. Open your browser and navigate to:
-
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env`:
 ```bash
-http://localhost:8003/api-docs
+cp .env.example .env
 ```
 
-3. The documentation includes:
+Edit `.env` with your preferred configuration (see table below).
 
-   - All available endpoints
-   - Request/Response schemas
-   - Example requests
-   - Authentication requirements
-   - API testing interface
+### 3. Start the Server
 
-4. To test an endpoint:
-   - Click on the endpoint you want to test
-   - Click "Try it out"
-   - Fill in the required parameters
-   - Click "Execute"
+```bash
+# Start in production mode
+npm start
+
+# Or start in development mode
+npm run dev
+```
+
+---
+
+## 🔑 Environment Variables Guide
+
+| Variable | Required | Description | Example / Default |
+| :--- | :---: | :--- | :--- |
+| `PORT` | No | Port the HTTP/WebSocket server listens on | `8003` |
+| `NODE_ENV` | No | Runtime environment (`development`, `production`) | `development` |
+| `MONGO_URL` | **Yes** | MongoDB connection string | `mongodb://localhost:27017/usb_wallet_db` |
+| `ARB_RPC_URI` | **Yes** | Arbitrum JSON-RPC endpoint | `https://sepolia-rollup.arbitrum.io/rpc` |
+| `ARB_CONTRACT_ADDRESS` | **Yes** | USB Token contract address on Arbitrum | `0x24c8479b8af9742c5160e0c29197e87a584cfe99` |
+| `ARB_FUNDING_ADDRESS` | **Yes** | Relayer wallet address that pays gas | `0x...` |
+| `ARB_FUNDING_KEY` | **Yes** | Private key of the relayer wallet | `your_private_key_here` |
+| `JWT_SECRET_KEY` | **Yes** | Secret string used for signing auth tokens | `any_secure_random_string` |
+| `SECRET_KEY` | **Yes** | Internal application encryption key | `any_secure_64_char_hex` |
+| `XDC_RPC_URI` | No | XDC / Apothem JSON-RPC endpoint | `https://rpc.apothem.network` |
+| `EMAIL_HOST` | No | SMTP host for email delivery (SendGrid, Postmark) | `smtp.sendgrid.net` |
+| `EMAIL_PASS` | No | SMTP API key / password | `your_smtp_password` |
+
+---
+
+## 📖 Interactive API Documentation
+
+Once the server is running, open your browser and navigate to:
+
+👉 **[http://localhost:8003/api-docs](http://localhost:8003/api-docs)**
+
+This opens the interactive Swagger UI where you can inspect schemas and test all endpoints directly.
+
+---
+
+## 🔄 How Gasless Relaying Works
+
+1. The **Mobile App** prompts the user to sign a transfer message offline with their private key (no gas required).
+2. The signed payload is sent via `POST /api/v1/stabolut/wallet/transfer-token`.
+3. The **Backend Relayer** validates the signature, wraps it into a contract call (`transferPreSigned`), and submits the transaction to Arbitrum using its funded `ARB_FUNDING_KEY` wallet.
+4. The contract transfers the tokens and deducts a small fee in USB tokens from the sender to reimburse the relayer.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on our workflow and code standards.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.

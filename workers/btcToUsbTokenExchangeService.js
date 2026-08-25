@@ -4,37 +4,48 @@ const { ABI, CONTRACT_ADDRESS, FUNDING_ADDRESS, FUNDING_KEY, RPC_URI, BITPAY_URL
 const { signAndSendTransaction, getGasPrice } = require("../utils/wallet");
 const Web3 = require("web3");
 const axios = require("axios");
-const constant = require("../constants/constant"); // Importing constants
-const web3Usb = new Web3(RPC_URI);
+const constant = require("../constants/constant");
 
 const btcToUsbTokenExchangeService = async () => {
+    if (!RPC_URI || !BITPAY_URL) {
+        console.log("RPC_URI or BITPAY_URL not configured. Skipping btcToUsbTokenExchangeService.");
+        return;
+    }
+
+    let web3Usb;
+    try {
+        web3Usb = new Web3(RPC_URI);
+    } catch (e) {
+        console.error("Failed to initialize Web3 in btcToUsbTokenExchangeService:", e.message);
+        return;
+    }
+
     cron.schedule("* * * * *", async () => {
         try {
-          
-            const documents = await purchasenModel.find({ transferStatus: constant.constant.transferStatus.Pending, type: constant.constant.currencyType.btc });
+            const documents = await purchasenModel.find({ 
+                transferStatus: constant.constant.transferStatus.Pending, 
+                type: constant.constant.currencyType.btc 
+            });
 
-            if (documents.length > 0) {
-
+            if (documents && documents.length > 0) {
                 for (const document of documents) {
-                    let response
+                    if (!document.transactionHash) continue;
+                    let response;
                     const usdRate = document.conversionRate;
                     try {
                         response = await axios.get(`${BITPAY_URL}/tx/${document.transactionHash}`);
-                       
-                    }
-                    catch (e) {
-                        console.log("Btc transaction not confirmed")
-                        continue
+                    } catch (e) {
+                        console.log("BTC transaction not confirmed or lookup failed:", e.message);
+                        continue;
                     }
 
-
-                    if (response.data.confirmations > 1) {
-
+                    if (response && response.data && response.data.confirmations > 1) {
                         let gasPrice = (await getGasPrice()) * 2;
                         const gasLimit = 21000000;
                         const nonce = await web3Usb.eth.getTransactionCount(FUNDING_ADDRESS);
                         const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
-                        const tx1 = contract.methods.mint(document.userUSBWalletAddres, parseInt(document.cryptoReceivedAmount * usdRate * 1e2));
+                        const targetAddress = document.userUSBWalletAddress || document.userUSBWalletAddres;
+                        const tx1 = contract.methods.mint(targetAddress, parseInt(document.cryptoReceivedAmount * usdRate * 1e2));
                         const encodedTx = tx1.encodeABI();
                         const transactionObject = {
                             nonce: web3Usb.utils.toHex(nonce),
@@ -54,18 +65,15 @@ const btcToUsbTokenExchangeService = async () => {
                             }
                         });
 
-                        console.log("Successfully transfer usb token against btc received.");
-                    }
-                    else {
-                        console.log("Btc transaction not cofirmed yet")
-                        continue
+                        console.log("Successfully transferred USB token against BTC received.");
+                    } else {
+                        console.log("BTC transaction not confirmed yet");
+                        continue;
                     }
                 }
-            } else {
-               
             }
         } catch (error) {
-            console.error("Error in transfer token service against btc submit:", error);
+            console.error("Error in transfer token service against BTC submit:", error);
         }
     });
 };

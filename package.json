@@ -4,8 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production.env node app.js"
+    "start": "node app.js",
+    "dev": "NODE_ENV=development node app.js",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "author": "Quantum Bases (quantumbases.com)",
   "license": "ISC",

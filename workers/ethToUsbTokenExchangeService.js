@@ -5,31 +5,47 @@ const { signAndSendTransaction, getGasPrice } = require("../utils/wallet"); // I
 const Web3 = require("web3"); // Importing Web3 for interacting with Ethereum blockchain
 const constant = require("../constants/constant"); // Importing constants
 
-// Creating Web3 instances for Ethereum and USB blockchains
-const web3Eth = new Web3(ETH_RPC_URL);
-const web3Usb = new Web3(RPC_URI);
-
 // Function to exchange Ethereum for USB token
 const ethToUsbTokenExchangeService = async () => {
+    if (!ETH_RPC_URL || !RPC_URI) {
+        console.log("ETH_RPC_URL or RPC_URI not configured. Skipping ethToUsbTokenExchangeService.");
+        return;
+    }
+
+    let web3Eth;
+    let web3Usb;
+    try {
+        web3Eth = new Web3(ETH_RPC_URL);
+        web3Usb = new Web3(RPC_URI);
+    } catch (e) {
+        console.error("Failed to initialize Web3 in ethToUsbTokenExchangeService:", e.message);
+        return;
+    }
+
     cron.schedule("* * * * *", async () => { // Scheduling the task to run every minute
         try {
-          
-            const documents = await purchasenModel.find({ transferStatus: constant.constant.transferStatus.Pending, type: constant.constant.currencyType.eth }); // Finding pending transactions for Ethereum
+            const documents = await purchasenModel.find({ 
+                transferStatus: constant.constant.transferStatus.Pending, 
+                type: constant.constant.currencyType.eth 
+            });
 
-            if (documents.length > 0) { // If pending transactions are found
-                for (const document of documents) { // Iterate over each pending transaction
-                    const resp = await web3Eth.eth.getTransactionReceipt(document.transactionHash); // Get transaction receipt
+            if (documents && documents.length > 0) {
+                for (const document of documents) {
+                    if (!document.transactionHash) continue;
+                    const resp = await web3Eth.eth.getTransactionReceipt(document.transactionHash);
 
-                    if (!resp) { // If transaction is not confirmed yet
+                    if (!resp) {
                         console.log("Transaction not confirmed yet. Please wait for confirmation.");
-                        continue; // Continue to the next iteration
-                    } else if (resp.status === false) { // If transaction failed
+                        continue;
+                    } else if (resp.status === false) {
                         console.log("Transaction failed. Please check the transaction.");
-                        continue; // Continue to the next iteration
-                    } else if (resp.status === true) { // If transaction is successful
-                        const tx = await web3Eth.eth.getTransaction(document.transactionHash); // Get transaction details
-                        const depositAmount = tx.value; // Extract deposit amount
-                        const usdRate = document.conversionRate; // Extract USD conversion rate
+                        continue;
+                    } else if (resp.status === true) {
+                        const tx = await web3Eth.eth.getTransaction(document.transactionHash);
+                        if (!tx || !tx.value) continue;
+                        const depositAmount = tx.value;
+                        const usdRate = document.conversionRate;
+                        const targetAddress = document.userUSBWalletAddress || document.userUSBWalletAddres;
 
                         // Calculate gas price, gas limit, and nonce for transaction
                         let gasPrice = (await getGasPrice()) * 2;
@@ -38,7 +54,7 @@ const ethToUsbTokenExchangeService = async () => {
 
                         // Create contract instance and encode transaction data
                         const contract = new web3Usb.eth.Contract(ABI, CONTRACT_ADDRESS);
-                        const tx1 = contract.methods.mint(document.userUSBWalletAddres, parseInt((depositAmount / 1e18) * usdRate * 1e2));
+                        const tx1 = contract.methods.mint(targetAddress, parseInt((depositAmount / 1e18) * usdRate * 1e2));
                         const encodedTx = tx1.encodeABI();
 
                         // Build transaction object
@@ -64,16 +80,14 @@ const ethToUsbTokenExchangeService = async () => {
                             }
                         });
 
-                        console.log("Successfully transfer usb token against ether received.");
+                        console.log("Successfully transferred USB token against ether received.");
                     }
                 }
-            } else {
-               
             }
         } catch (error) {
-            console.error("Error in transfer token service againt ether submit:", error); // Log any errors that occur during the process
+            console.error("Error in transfer token service against ether submit:", error);
         }
     });
 };
 
-module.exports = { ethToUsbTokenExchangeService }; // Exporting the function
+module.exports = { ethToUsbTokenExchangeService };

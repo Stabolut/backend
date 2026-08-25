@@ -8,11 +8,8 @@ const { sendSuccessResponse } = require("../utils/responses");
 const { infoMessages } = require("../constants/messages");
 
 // Function to create a new wallet for a user
-createWallet = async (req, res) => {
-  // Call the createUserWallet function from the walletService module and await its response
+const createWallet = async (req, res) => {
   const userWallet = await wallet.createUserWallet();
-
-  // Send a success response with the message indicating successful creation of wallet and the user wallet data
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.ITEM_CREATED_SUCCESSFULLY("Wallet"),
@@ -22,19 +19,14 @@ createWallet = async (req, res) => {
 };
 
 // Function to add a wallet
-addWallet = async (req, res) => {
-  // Call the addWallet function from the walletService module and await its response
+const addWallet = async (req, res) => {
   const data = await wallet.addWallet(req);
-  // Send a success response with the message received from adding a wallet
   return sendSuccessResponse(res, data.message, 200, data.data);
 };
 
 // Function to transfer tokens
-transferTokens = async (req, res) => {
-  // Call the transferTokens function from the walletService module and await its response
+const transferTokens = async (req, res) => {
   const transferHash = await wallet.transferTokens(req);
-
-  // Send a success response with the message indicating successful token transfer and the transfer hash
   return sendSuccessResponse(
     res,
     infoMessages.WALLET.TOKEN_TRANSFER_SUCCESSFULLY,
@@ -44,11 +36,8 @@ transferTokens = async (req, res) => {
 };
 
 // Function to get transactions list
-transactionsList = async (req, res) => {
-  // Call the transactionsList function from the walletService module and await its response
+const transactionsList = async (req, res) => {
   const transactionsList = await wallet.transactionsList(req);
-
-  // Send a success response with the message indicating successful retrieval of transaction list and the list of transactions
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction list"),
@@ -58,11 +47,8 @@ transactionsList = async (req, res) => {
 };
 
 // Function to get transactions list with limit
-transactionsListWithLimit = async (req, res) => {
-  // Call the transactionsListWithLimit function from the walletService module and await its response
+const transactionsListWithLimit = async (req, res) => {
   const transactionsList = await wallet.transactionsListWithLimit(req);
-
-  // Send a success response with the message indicating successful retrieval of transaction list and the list of transactions
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("Transaction list"),
@@ -72,11 +58,8 @@ transactionsListWithLimit = async (req, res) => {
 };
 
 // Function to update transaction status
-updateTransactionStatus = async (req, res) => {
-  // Call the updateTransactionStatus function from the walletService module and await its response
+const updateTransactionStatus = async (req, res) => {
   await wallet.updateTransactionStatus(req);
-
-  // Send a success response with the message indicating successful update of transaction status
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.ITEM_UPDATED_SUCCESSFULLY("Transaction status"),
@@ -85,24 +68,19 @@ updateTransactionStatus = async (req, res) => {
 };
 
 // Function to get user by wallet
-getUserByWallet = async (req, res) => {
-  // Call the getUserByWallet function from the walletService module and await its response
-  await wallet.getUserByWallet(req);
-
-  // Send a success response with the message indicating successful retrieval of user by wallet
+const getUserByWallet = async (req, res) => {
+  const data = await wallet.getUserByWallet(req);
   return sendSuccessResponse(
     res,
-    infoMessages.GENERIC.ITEM_UPDATED_SUCCESSFULLY("Transaction status"),
-    200
+    infoMessages.GENERIC.ITEM_GET_SUCCESSFULLY("User"),
+    200,
+    data
   );
 };
 
-// Function to get user by wallet
-mintCoin = async (req, res) => {
-  // Call the getUserByWallet function from the walletService module and await its response
+// Function to mint coin
+const mintCoin = async (req, res) => {
   let msg = await wallet.mintCoin(req);
-
-  // Send a success response with the message indicating successful retrieval of user by wallet
   return sendSuccessResponse(
     res,
     msg,
@@ -110,12 +88,9 @@ mintCoin = async (req, res) => {
   );
 };
 
-// Function to get user by wallet
-getFreeCoin = async (req, res) => {
-  // Call the getUserByWallet function from the walletService module and await its response
+// Function to get free coin
+const getFreeCoin = async (req, res) => {
   let msg = await wallet.getFreeCoin(req);
-
-  // Send a success response with the message indicating successful retrieval of user by wallet
   return sendSuccessResponse(
     res,
     msg,
@@ -123,15 +98,9 @@ getFreeCoin = async (req, res) => {
   );
 };
 
-withdrawToken
-
-// Function to get user by wallet
-withdrawToken = async (req, res) => {
-  console.log("i am hit thereee",req.body)
-  // Call the getUserByWallet function from the walletService module and await its response
+// Function to withdraw token
+const withdrawToken = async (req, res) => {
   await wallet.withdrawToken(req);
-
-  // Send a success response with the message indicating successful retrieval of user by wallet
   return sendSuccessResponse(
     res,
     infoMessages.GENERIC.WITHDRAW_SUCCESSFULLY,
