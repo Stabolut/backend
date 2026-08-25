@@ -23,10 +23,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci || npm install
+        run: npm install
 
       - name: Validate Syntax & Entrypoints
         run: |
@@ -34,26 +33,19 @@ jobs:
           node -c config.js
           node -c service/walletService.js
           node -c controller/wallet.js
-          echo "All syntax and entrypoint checks passed."
+          echo "All syntax checks passed."
 
   deploy:
     name: Deploy to Production Server
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    # Only attempt deployment if secrets are configured
-    env:
-      SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
-      SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+    if: ${{ github.ref == 'refs/heads/main' && secrets.SERVER_HOST != '' && secrets.SERVER_USERNAME != '' && secrets.SERVER_PASSWORD != '' }}
 
     steps:
       - name: Checkout Repository
-        if: env.SERVER_HOST != '' && env.SERVER_USERNAME != ''
         uses: actions/checkout@v4
 
       - name: Copy files via SCP
-        if: env.SERVER_HOST != '' && env.SERVER_USERNAME != ''
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -63,7 +55,6 @@ jobs:
           target: /${{ secrets.SERVER_USERNAME }}/app
 
       - name: Execute Deployment Script via SSH
-        if: env.SERVER_HOST != '' && env.SERVER_USERNAME != ''
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
