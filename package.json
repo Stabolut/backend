@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "NODE_ENV=development node app.js",
+    "start": "node api.js && node app.js",
+    "dev": "node api.js && NODE_ENV=development node app.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "author": "Quantum Bases (quantumbases.com)",
